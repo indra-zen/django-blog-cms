@@ -1,0 +1,9 @@
+Full-Featured Blog & CMS
+
+- Concept: A complete blog website, not just an API.
+
+- Monolith Features:
+  - User Auth: Use Django's built-in system for user registration, login, and password reset.
+  - Views/Templates: Create HTML templates for the home page (list of posts), the post detail page, and a page for users to write new posts.
+  - Database (ORM): Define models for Post, Comment, and Category.
+  - Admin Panel: Use the built-in Django Admin so you (the admin) can edit, delete, and approve posts or comments without writing any new code.

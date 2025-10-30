@@ -1,0 +1,83 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Home - Blog CMS{% endblock %}
+
+{% block content %}
+<div class="home-page">
+    <div class="search-bar">
+        <form method="get" action="{% url 'home' %}">
+            <input type="text" name="q" placeholder="Search posts..." value="{{ search_query }}">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <div class="categories">
+        <h3>Categories</h3>
+        <ul class="category-list">
+            <li><a href="{% url 'home' %}" {% if not category_slug %}class="active"{% endif %}>All</a></li>
+            {% for category in categories %}
+                <li>
+                    <a href="?category={{ category.slug }}" 
+                       {% if category_slug == category.slug %}class="active"{% endif %}>
+                        {{ category.name }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="posts-list">
+        <h1>Latest Posts</h1>
+        
+        {% if page_obj %}
+            {% for post in page_obj %}
+                <article class="post-card">
+                    {% if post.featured_image %}
+                        <div class="post-image">
+                            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
+                        </div>
+                    {% endif %}
+                    <div class="post-content">
+                        <h2><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></h2>
+                        <div class="post-meta">
+                            <span class="author">By {{ post.author.username }}</span>
+                            <span class="date">{{ post.published_at|date:"F d, Y" }}</span>
+                            {% if post.category %}
+                                <span class="category">
+                                    <a href="?category={{ post.category.slug }}">{{ post.category.name }}</a>
+                                </span>
+                            {% endif %}
+                        </div>
+                        {% if post.excerpt %}
+                            <p class="excerpt">{{ post.excerpt }}</p>
+                        {% else %}
+                            <p class="excerpt">{{ post.content|truncatewords:30 }}</p>
+                        {% endif %}
+                        <a href="{% url 'post_detail' post.slug %}" class="read-more">Read More →</a>
+                    </div>
+                </article>
+            {% endfor %}
+
+            {% if page_obj.has_other_pages %}
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if category_slug %}&category={{ category_slug }}{% endif %}">First</a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if category_slug %}&category={{ category_slug }}{% endif %}">Previous</a>
+                    {% endif %}
+
+                    <span class="current-page">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if category_slug %}&category={{ category_slug }}{% endif %}">Next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if category_slug %}&category={{ category_slug }}{% endif %}">Last</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <p class="no-posts">No posts available yet. Be the first to create one!</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

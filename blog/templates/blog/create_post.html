@@ -1,0 +1,18 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Create Post - Blog CMS{% endblock %}
+
+{% block content %}
+<div class="create-post-page">
+    <h1>Create New Post</h1>
+    
+    <form method="post" enctype="multipart/form-data" class="post-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create Post</button>
+            <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}My Posts - Blog CMS{% endblock %}
+
+{% block content %}
+<div class="user-posts-page">
+    <h1>My Posts</h1>
+    
+    <div class="posts-list">
+        {% if page_obj %}
+            <table class="posts-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in page_obj %}
+                        <tr>
+                            <td><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></td>
+                            <td>{{ post.category|default:"Uncategorized" }}</td>
+                            <td>
+                                <span class="status-badge status-{{ post.status }}">
+                                    {{ post.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ post.created_at|date:"M d, Y" }}</td>
+                            <td class="actions">
+                                <a href="{% url 'edit_post' post.slug %}" class="btn-small">Edit</a>
+                                <a href="{% url 'delete_post' post.slug %}" class="btn-small btn-danger">Delete</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if page_obj.has_other_pages %}
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    {% endif %}
+
+                    <span class="current-page">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <p class="no-posts">You haven't created any posts yet.</p>
+            <a href="{% url 'create_post' %}" class="btn btn-primary">Create Your First Post</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

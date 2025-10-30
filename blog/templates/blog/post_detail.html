@@ -1,0 +1,76 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ post.title }} - Blog CMS{% endblock %}
+
+{% block content %}
+<article class="post-detail">
+    <header class="post-header">
+        <h1>{{ post.title }}</h1>
+        <div class="post-meta">
+            <span class="author">By {{ post.author.username }}</span>
+            <span class="date">{{ post.published_at|date:"F d, Y" }}</span>
+            {% if post.category %}
+                <span class="category">
+                    <a href="{% url 'category_posts' post.category.slug %}">{{ post.category.name }}</a>
+                </span>
+            {% endif %}
+        </div>
+        
+        {% if user == post.author or user.is_staff %}
+            <div class="post-actions">
+                <a href="{% url 'edit_post' post.slug %}" class="btn btn-secondary">Edit</a>
+                <a href="{% url 'delete_post' post.slug %}" class="btn btn-danger">Delete</a>
+            </div>
+        {% endif %}
+    </header>
+
+    {% if post.featured_image %}
+        <div class="post-featured-image">
+            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}">
+        </div>
+    {% endif %}
+
+    <div class="post-content">
+        {{ post.content|linebreaks }}
+    </div>
+
+    <div class="post-footer">
+        <p class="updated-date">Last updated: {{ post.updated_at|date:"F d, Y" }}</p>
+    </div>
+</article>
+
+<section class="comments-section">
+    <h2>Comments ({{ comments.count }})</h2>
+
+    {% if user.is_authenticated %}
+        <div class="comment-form">
+            <h3>Leave a Comment</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ comment_form.as_p }}
+                <button type="submit" class="btn btn-primary">Submit Comment</button>
+            </form>
+        </div>
+    {% else %}
+        <p class="login-prompt">
+            <a href="{% url 'login' %}?next={{ request.path }}">Login</a> to leave a comment.
+        </p>
+    {% endif %}
+
+    <div class="comments-list">
+        {% for comment in comments %}
+            <div class="comment">
+                <div class="comment-header">
+                    <strong>{{ comment.author.username }}</strong>
+                    <span class="comment-date">{{ comment.created_at|date:"F d, Y" }}</span>
+                </div>
+                <div class="comment-body">
+                    {{ comment.content|linebreaks }}
+                </div>
+            </div>
+        {% empty %}
+            <p class="no-comments">No comments yet. Be the first to comment!</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

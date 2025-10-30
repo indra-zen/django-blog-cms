@@ -1,0 +1,18 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Edit Post - Blog CMS{% endblock %}
+
+{% block content %}
+<div class="edit-post-page">
+    <h1>Edit Post</h1>
+    
+    <form method="post" enctype="multipart/form-data" class="post-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update Post</button>
+            <a href="{% url 'post_detail' post.slug %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
