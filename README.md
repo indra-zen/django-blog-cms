@@ -2,6 +2,21 @@
 
 A full-featured blog and content management system built with Django.
 
+## 📚 Learning Resources
+
+**New to Django?** Check out our comprehensive tutorial:
+
+**→ [Complete Step-by-Step Tutorial](./tutorial/TUTORIAL.md)** ←
+
+The tutorial covers:
+- Django basics and architecture (10 chapters)
+- Building this exact blog application
+- Step-by-step explanations with code examples
+- Best practices and troubleshooting
+- From development to deployment
+
+Perfect for teaching friends or learning Django from scratch!
+
 ## 🎉 Quick Start
 
 The application is now running at: **http://localhost:8000/**
