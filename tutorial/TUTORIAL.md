@@ -1,313 +1,226 @@
-# Django Blog/CMS Tutorial
+# Tutorial Django Blog/CMS
 
-Complete step-by-step tutorial for building a Django blog and content management system from scratch.
+Tutorial step-by-step lengkap buat bikin blog dan sistem manajemen konten pake Django dari nol.
 
-## About This Tutorial
+## Tentang Tutorial Ini
 
-This comprehensive tutorial will teach you how to build a fully-functional blog and content management system using Django. Each chapter builds on the previous one, taking you from basic concepts to deployment.
+Tutorial komprehensif ini bakal ngajarin lo cara bikin blog dan CMS yang fully-functional pake Django. Setiap chapter ngebangun dari chapter sebelumnya, dari konsep dasar sampai deployment.
 
-**Perfect for:**
-- Django beginners
-- Python developers learning web development
-- Anyone wanting to build a blog or CMS
-- Teaching friends Django development
+**Cocok buat:**
+- Pemula Django
+- Developer Python yang lagi belajar web development
+- Siapa aja yang mau bikin blog atau CMS
+- Ngajarin temen-temen development Django
 
-## What You'll Build
+## Apa yang Bakal Lo Bikin
 
-A complete blog application with:
-- ✅ User authentication (register, login, logout, password reset)
-- ✅ Create, edit, and delete blog posts
-- ✅ Rich text content with featured images
-- ✅ Categories and tagging system
-- ✅ Comment system with moderation
-- ✅ Search functionality
-- ✅ Draft and published post status
-- ✅ User profiles and author pages
+Aplikasi blog lengkap dengan:
+- ✅ Autentikasi user (daftar, login, logout, reset password)
+- ✅ Bikin, edit, dan hapus post blog
+- ✅ Konten rich text dengan featured images
+- ✅ Sistem kategori dan tagging
+- ✅ Sistem komentar dengan moderasi
+- ✅ Fitur search
+- ✅ Status post draft dan published
+- ✅ Profile user dan halaman author
 - ✅ Responsive design
-- ✅ Django admin panel customization
+- ✅ Customisasi panel admin Django
 - ✅ Pagination
-- ✅ Permission system
+- ✅ Sistem permission
 
-## Tutorial Structure
+## Struktur Tutorial
 
-### Part 1: Foundations (Chapters 1-3)
-Get Django installed and understand the fundamentals
+### Bagian 1: Fondasi (Chapter 1-3)
+Install Django dan pahamin fundamental-nya
 
-### Part 2: Core Features (Chapters 4-6)
-Build the main blog functionality
+### Bagian 2: Fitur Inti (Chapter 4-6)
+Bikin fungsionalitas blog utama
 
-### Part 3: User Features (Chapters 7-8)
-Add forms and authentication
+### Bagian 3: Fitur User (Chapter 7-8)
+Tambahin form dan authentication
 
-### Part 4: Polish & Deploy (Chapters 9-10)
-Style the app and deploy to production
-
----
-
-## Chapters
-
-### 1. [Getting Started](./01-getting-started.md) ⏱️ 30 minutes
-- Setting up your development environment
-- Installing Python and Django
-- Creating your first Django project
-- Understanding Django project structure
-- Running the development server
-- Creating your first app
-
-**You'll learn:** How to set up Django and understand the project structure
+### Bagian 4: Polish & Deploy (Chapter 9-10)
+Styling aplikasi dan deploy ke production
 
 ---
 
-### 2. [Understanding Django Architecture](./02-understanding-django.md) ⏱️ 45 minutes
-- MTV (Model-Template-View) pattern
-- How Django processes requests
+## Daftar Chapter
+
+### 1. [Memulai](./01-memulai.md) ⏱️ 30 menit
+- Setup development environment
+- Install Python dan Django
+- Bikin project Django pertama
+- Pahamin struktur project Django
+- Jalanin development server
+- Bikin app pertama
+
+**Lo bakal belajar:** Cara setup Django dan pahamin struktur project
+
+---
+
+### 2. [Pahamin Arsitektur Django](./02-arsitektur-django.md) ⏱️ 45 menit
+- Pola MTV (Model-Template-View)
+- Cara Django proses request
 - Request/Response cycle
-- Project vs App structure
-- Django's philosophy and best practices
-- Settings and configuration
+- Struktur Project vs App
+- Filosofi dan best practice Django
+- Settings dan konfigurasi
 
-**You'll learn:** How Django works under the hood
+**Lo bakal belajar:** Cara kerja Django di balik layar
 
 ---
 
-### 3. [Database Models](./03-database-models.md) ⏱️ 1 hour
-- Creating database models
-- Field types and options
+### 3. [Model Database](./03-model-database.md) ⏱️ 1 jam
+- Bikin model database
+- Tipe field dan options
 - Relationships (ForeignKey, ManyToMany, OneToOne)
-- Model methods and properties
-- Migrations (creating and applying)
-- Django ORM basics
-- QuerySets and database queries
+- Method dan properties model
+- Migrations (bikin dan apply)
+- Dasar Django ORM
+- QuerySets dan database queries
 - Model managers
 
-**You'll learn:** How to design and interact with databases in Django
+**Lo bakal belajar:** Cara design dan interaksi dengan database di Django
 
 ---
 
-### 4. [Django Admin](./04-django-admin.md) ⏱️ 45 minutes
-- Registering models with admin
-- Customizing admin interface
-- List display, filters, and search
-- Admin actions (bulk operations)
-- Fieldsets for organization
-- Inline models (editing related objects)
+### 4. [Django Admin](./04-django-admin.md) ⏱️ 45 menit
+- Register model dengan admin
+- Customisasi interface admin
+- List display, filters, dan search
+- Admin actions (operasi bulk)
+- Fieldsets buat organisasi
+- Inline models (edit objek related)
 - Admin permissions
 - Prepopulated fields
 
-**You'll learn:** How to use Django's powerful admin interface
+**Lo bakal belajar:** Cara pake interface admin Django yang powerful
 
 ---
 
-### 5. [Views and URLs](./05-views-and-urls.md) ⏱️ 1.5 hours
-- Function-based views
-- URL patterns and routing
-- URL parameters and path converters
-- GET and POST requests
-- QuerySets and filtering
-- Pagination
-- Permissions and @login_required
-- Messages framework
-- Shortcuts (get_object_or_404, redirect)
+### 5. [Views dan URLs](./05-views-urls.md) ⏱️ 1 jam
+- Function-based views vs Class-based views
+- URL patterns dan routing
+- URL namespaces
+- Dynamic URLs dengan parameters
+- Generic views (ListView, DetailView, dll)
+- View decorators
+- Request dan Response objects
+- Redirect dan reverse URLs
 
-**You'll learn:** How to handle web requests and create all blog views
+**Lo bakal belajar:** Cara handle requests dan return responses
 
 ---
 
-### 6. [Templates and UI](./06-templates-and-ui.md) ⏱️ 1.5 hours
-- Django template language
-- Template inheritance (extends, blocks)
-- Template tags (if, for, url, static)
-- Template filters (date, truncate, etc.)
-- Context variables
-- Forms in templates
-- CSRF protection
-- Creating all HTML templates
+### 6. [Templates dan UI](./06-templates-ui.md) ⏱️ 1 jam
+- Template syntax Django
+- Template inheritance (extends, include)
+- Context variables dan filters
+- Template tags (for, if, with)
+- Static files (CSS, JS, images)
 - Template best practices
+- Custom template tags dan filters
 
-**You'll learn:** How to create dynamic HTML pages with Django templates
+**Lo bakal belajar:** Cara bikin dynamic HTML dengan Django templates
 
 ---
 
-### 7. [Forms](./07-forms.md) ⏱️ 1 hour
-- Django Forms framework
-- ModelForms vs Forms
-- Form fields and widgets
-- Form validation (field-level and form-level)
+### 7. [Forms](./07-forms.md) ⏱️ 1 jam
+- Django Forms vs ModelForms
+- Form fields dan widgets
+- Form validation
 - Custom validators
-- Form widgets and styling
-- File upload handling
-- Formsets for multiple objects
-- Form best practices
+- Cleaning data
+- Form handling di views
+- CSRF protection
+- File uploads
+- Formsets
 
-**You'll learn:** How to handle user input securely with Django forms
-
----
-
-### 8. [Authentication](./08-authentication.md) ⏱️ 1 hour
-- Django's User model
-- Login and logout views
-- User registration with UserCreationForm
-- Customizing registration form
-- Password reset flow (4-step process)
-- @login_required decorator
-- Permissions and authorization
-- Sessions and cookies
-- User profiles (advanced)
-- Security best practices
-
-**You'll learn:** How to implement a complete authentication system
+**Lo bakal belajar:** Cara handle user input dengan aman
 
 ---
 
-### 9. [Styling with CSS](./09-styling-with-css.md) ⏱️ 1 hour
-- Static files structure
-- CSS fundamentals
-- Flexbox layout
-- CSS Grid
-- Responsive design (mobile-first)
-- Media queries
-- Common UI patterns (cards, buttons, forms)
-- CSS animations
-- Accessibility
-- Dark mode
-- Performance optimization
+### 8. [Authentication](./08-authentication.md) ⏱️ 1 jam
+- User model Django
+- Login dan logout
+- Registration
+- Password reset dan change
+- Login required decorator
+- Permissions dan groups
+- Custom user model
+- Authentication views
 
-**You'll learn:** How to style your Django app and make it responsive
+**Lo bakal belajar:** Cara implement sistem authentication
 
 ---
 
-### 10. [Testing & Deployment](./10-testing-deployment.md) ⏱️ 1.5 hours
-- Writing Django tests
-- Testing models, views, and forms
+### 9. [Styling dengan CSS](./09-styling-css.md) ⏱️ 45 menit
+- Organisasi static files
+- CSS best practices
+- Responsive design
+- Modern CSS techniques
+- CSS frameworks (Bootstrap, Tailwind)
+- Custom styling
+
+**Lo bakal belajar:** Cara bikin aplikasi lo keren
+
+---
+
+### 10. [Testing & Deployment](./10-testing-deployment.md) ⏱️ 1.5 jam
+- Unit testing di Django
+- Test models, views, dan forms
 - Test coverage
-- Deployment preparation
 - Production settings
+- Deploy ke server (Heroku, DigitalOcean)
 - Environment variables
-- Security checklist
-- Deployment options:
-  - Heroku (PaaS)
-  - DigitalOcean/AWS (VPS)
-  - PythonAnywhere
-- Database migration (PostgreSQL)
-- Static file serving
-- Monitoring and logging
-- Performance optimization
-- Maintenance tasks
+- Static files di production
+- Database migrations di production
 
-**You'll learn:** How to test your code and deploy to production
+**Lo bakal belajar:** Cara test dan deploy aplikasi lo
 
 ---
 
-## Prerequisites
+## Prerequisite
 
-- **Basic Python knowledge**: Variables, functions, classes, imports
-- **Command line basics**: Navigate directories, run commands
-- **HTML/CSS basics**: Helpful but not required
-- **Text editor**: VS Code, PyCharm, or any editor
+### Yang Lo Harus Tau
+- **HTML & CSS dasar** - Lo udah bisa bikin halaman web sederhana ✅
+- **JavaScript dasar** - Tau gimana JavaScript kerja ✅
+- **Python dasar** - Variables, functions, classes, loops (kalo belum, belajar dulu basic Python sekitar 1-2 minggu)
 
-**No prior Django or web development experience needed!**
-
-## Time Commitment
-
-- **Total time**: 10-12 hours
-- **Suggested pace**: 1-2 chapters per day
-- **Can be completed**: Over a weekend or week
-
-## How to Use This Tutorial
-
-1. **Start at Chapter 1** - Don't skip ahead! Each chapter builds on previous ones.
-
-2. **Type the code** - Don't copy-paste. Typing helps you learn.
-
-3. **Read the "Understanding" sections** - These explain *why*, not just *how*.
-
-4. **Complete the checklists** - Verify you've learned each section.
-
-5. **Try the troubleshooting** - When stuck, check the troubleshooting sections.
-
-6. **Experiment** - After each chapter, try modifying the code.
-
-## Getting Help
-
-If you get stuck:
-
-1. **Check the troubleshooting section** in each chapter
-2. **Read error messages carefully** - They usually tell you what's wrong
-3. **Use Django documentation** - Links provided throughout
-4. **Search for the error** - Someone else has likely had the same issue
-5. **Django Discord/Reddit** - Friendly communities for help
-
-## After Completing This Tutorial
-
-You'll be able to:
-- ✅ Build Django applications from scratch
-- ✅ Design database schemas with models
-- ✅ Create views and URL routing
-- ✅ Use Django's template system
-- ✅ Handle forms and validation
-- ✅ Implement authentication
-- ✅ Customize the admin interface
-- ✅ Style applications with CSS
-- ✅ Write tests
-- ✅ Deploy to production
-
-## Next Learning Steps
-
-After finishing:
-1. **Django REST Framework** - Build APIs
-2. **Celery** - Background tasks
-3. **Channels** - WebSockets and real-time features
-4. **Docker** - Containerization
-5. **Advanced queries** - Aggregation, annotations, complex queries
-6. **Custom middleware** - Request/response processing
-7. **Custom template tags** - Reusable template logic
-
-## Project Files
-
-The complete code for this tutorial is in:
-```
-/workspace/
-├── blog_cms/          # Django project
-│   ├── settings.py
-│   └── urls.py
-├── blog/              # Blog app
-│   ├── models.py
-│   ├── views.py
-│   ├── urls.py
-│   ├── forms.py
-│   ├── admin.py
-│   └── templates/
-├── static/            # CSS, JS, images
-├── media/             # User uploads
-├── tutorial/          # These tutorial files
-├── requirements.txt
-└── manage.py
-```
-
-## Test Credentials
-
-After running `python manage.py create_sample_data`:
-
-**Admin account:**
-- Username: `admin`
-- Password: `admin123`
-
-**Author account:**
-- Username: `author`
-- Password: `author123`
-
-## Support This Tutorial
-
-Found this helpful? 
-- ⭐ Star the repository
-- 📢 Share with friends learning Django
-- 💬 Provide feedback
-- 🐛 Report issues or typos
+### Yang Perlu Diinstall
+- **Python 3.8+** - [Download di sini](https://www.python.org/)
+- **Text Editor** - VS Code, PyCharm, atau yang lo suka
+- **Terminal/Command Line** - Buat jalanin commands
+- **Git** (opsional) - Buat version control
 
 ---
 
-## Ready to Start?
+## Cara Pake Tutorial Ini
 
-**→ Begin with [Chapter 1: Getting Started](./01-getting-started.md)**
+1. **Ikutin berurutan** - Setiap chapter ngebangun dari yang sebelumnya
+2. **Praktek sambil baca** - Jangan cuma baca, coding juga!
+3. **Eksperimen** - Coba variasi dan bikin error (emang buat belajar)
+4. **Bikin catatan** - Tulis hal-hal penting yang lo pelajari
+5. **Build something** - Setelah selesai, bikin project lo sendiri
 
-Let's build something amazing! 🚀
+## Tips Belajar
+
+💡 **Stuck?** Normal kok! Google error message lo atau cek dokumentasi Django  
+💡 **Bingung?** Baca ulang chapter sebelumnya atau cek contoh kode  
+💡 **Bosen?** Istirahat dulu, jangan dipaksain  
+💡 **Excited?** Bagus! Keep that energy dan terus ngoding  
+
+## Bantuan & Resources
+
+- **Dokumentasi Django:** https://docs.djangoproject.com/
+- **Django Tutorial Official:** https://docs.djangoproject.com/en/stable/intro/tutorial01/
+- **Stack Overflow:** Tempat nanya kalo stuck
+- **Django Discord/Reddit:** Komunitas Django yang helpful
+
+---
+
+## Siap Mulai?
+
+Yuk mulai dari [Chapter 1: Memulai](./01-memulai.md)!
+
+Good luck dan have fun! 🚀

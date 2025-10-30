@@ -1,37 +1,37 @@
 # Tutorial 08: Authentication
 
-## What You'll Learn
+## Apa yang Bakal Lo Pelajari
 
-- Django's authentication system
-- User registration
-- Login and logout
-- Password reset functionality
-- Protecting views with decorators
+- Django authentication system
+- User registration & login
+- Password reset
+- Protecting views dengan decorators
 - User permissions
 
-## Understanding Authentication
+## Memahami Authentication
 
-**Authentication** answers: "Who are you?"
-**Authorization** answers: "What can you do?"
+**Authentication:** "Lo siapa?"  
+**Authorization:** "Lo boleh ngapain aja?"
 
 Django provides:
-- User model (`User`)
+- User model built-in
 - Login/logout views
-- Password hashing
+- Password hashing (auto secure!)
 - Session management
 - Permission system
 
-## Step 1: Understanding the User Model
+## Step 1: User Model Django
 
-Django's built-in User model has:
+Django punya built-in User model:
 
 ```python
 from django.contrib.auth.models import User
 
+# Create user
 user = User.objects.create_user(
     username='john',
     email='john@example.com',
-    password='secret123'  # Automatically hashed!
+    password='secret123'  # Auto hashed!
 )
 
 # User attributes
@@ -40,9 +40,9 @@ user.email          # 'john@example.com'
 user.first_name     # Optional
 user.last_name      # Optional
 user.is_active      # True/False
-user.is_staff       # Can access admin?
+user.is_staff       # Bisa access admin?
 user.is_superuser   # All permissions?
-user.date_joined    # When registered
+user.date_joined    # Kapan register
 user.last_login     # Last login time
 
 # Check password
@@ -50,44 +50,42 @@ user.check_password('secret123')  # True
 user.check_password('wrong')      # False
 ```
 
+**Keren!** Password **NEVER** stored as plain text. Django pake hashing algorithm yang secure!
+
 ## Step 2: Login View
 
-We created a simple login in our main URLs. Let's understand it:
-
-### In `blog_cms/urls.py`:
+Di `blog_cms/urls.py`:
 
 ```python
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path('login/', auth_views.LoginView.as_view(template_name='blog/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('login/', 
+         auth_views.LoginView.as_view(template_name='blog/login.html'), 
+         name='login'),
+    path('logout/', 
+         auth_views.LogoutView.as_view(), 
+         name='logout'),
 ]
 ```
 
 **LoginView:**
-- Handles GET (show form) and POST (process login)
-- Uses `authentication_form` (can customize)
+- Handles GET (show form) dan POST (process login)
 - Checks username/password
 - Creates session on success
-- Redirects to `LOGIN_REDIRECT_URL`
+- Redirects ke `LOGIN_REDIRECT_URL`
 
-### In `blog_cms/settings.py`:
+Di `blog_cms/settings.py`:
 
 ```python
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'home'
-LOGOUT_REDIRECT_URL = 'home'
+LOGIN_URL = 'login'             # Redirect kesini kalo belum login
+LOGIN_REDIRECT_URL = 'home'     # Redirect kesini setelah login
+LOGOUT_REDIRECT_URL = 'home'    # Redirect kesini setelah logout
 ```
 
-**What these do:**
-- `LOGIN_URL`: Where to redirect if not logged in
-- `LOGIN_REDIRECT_URL`: Where to go after login
-- `LOGOUT_REDIRECT_URL`: Where to go after logout
+Login Template (`blog/templates/blog/login.html`):
 
-### Login Template (`blog/templates/blog/login.html`):
-
-```html
+```django
 {% extends 'blog/base.html' %}
 
 {% block title %}Login{% endblock %}
@@ -104,17 +102,7 @@ LOGOUT_REDIRECT_URL = 'home'
     
     <form method="post">
         {% csrf_token %}
-        
-        <div class="form-group">
-            <label>Username:</label>
-            {{ form.username }}
-        </div>
-        
-        <div class="form-group">
-            <label>Password:</label>
-            {{ form.password }}
-        </div>
-        
+        {{ form.as_p }}
         <button type="submit">Login</button>
         <input type="hidden" name="next" value="{{ next }}">
     </form>
@@ -125,16 +113,11 @@ LOGOUT_REDIRECT_URL = 'home'
 {% endblock %}
 ```
 
-**Key Points:**
-- `{{ next }}`: Redirect to original page after login
-- `form.errors`: Show login errors
-- Built-in form handles validation
+**Key:** `{{ next }}` redirect ke original page setelah login!
 
 ## Step 3: Registration View
 
-We created a custom registration view:
-
-### In `blog/views.py`:
+Di `blog/views.py`:
 
 ```python
 from django.contrib.auth import login
@@ -144,8 +127,8 @@ def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)  # Log in immediately
+            user = form.save()              # Create user
+            login(request, user)             # Log in immediately!
             messages.success(request, 'Welcome! Your account has been created.')
             return redirect('home')
     else:
@@ -154,55 +137,20 @@ def register(request):
     return render(request, 'blog/register.html', {'form': form})
 ```
 
-**Understanding the code:**
+**UserCreationForm** punya:
+- `username` field
+- `password1` field (password)
+- `password2` field (confirm password)
+- Built-in validation buat password strength!
 
-1. **`UserCreationForm`**: Built-in form with:
-   - `username` field
-   - `password1` field (password)
-   - `password2` field (confirm password)
-   - Validation for password strength
+## Step 4: Custom Registration Form
 
-2. **`form.save()`**: Creates User and hashes password
-
-3. **`login(request, user)`**: Logs user in immediately
-
-### Registration Template:
-
-```html
-{% extends 'blog/base.html' %}
-
-{% block title %}Register{% endblock %}
-
-{% block content %}
-<div class="auth-container">
-    <h2>Register</h2>
-    
-    <form method="post">
-        {% csrf_token %}
-        
-        {% if form.errors %}
-            <div class="alert alert-danger">
-                Please correct the errors below.
-            </div>
-        {% endif %}
-        
-        {{ form.as_p }}
-        
-        <button type="submit">Register</button>
-    </form>
-    
-    <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
-</div>
-{% endblock %}
-```
-
-## Step 4: Customizing Registration Form
-
-The default `UserCreationForm` only has username and password. Let's add email:
+Form default cuma punya username & password. Mari tambahin email:
 
 ```python
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django import forms
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -221,11 +169,11 @@ class CustomUserCreationForm(UserCreationForm):
 # Update view
 def register(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)  # Use custom form
+        form = CustomUserCreationForm(request.POST)  # Custom!
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, 'Welcome! Your account has been created.')
+            messages.success(request, 'Welcome!')
             return redirect('home')
     else:
         form = CustomUserCreationForm()
@@ -235,14 +183,14 @@ def register(request):
 
 ## Step 5: Protecting Views
 
-Use `@login_required` to protect views:
+Use `@login_required` buat protect views:
 
 ```python
 from django.contrib.auth.decorators import login_required
 
 @login_required
 def create_post(request):
-    # Only logged-in users can access
+    # Cuma logged-in users yang bisa access!
     if request.method == 'POST':
         form = PostForm(request.POST, request.FILES)
         if form.is_valid():
@@ -256,12 +204,14 @@ def create_post(request):
     return render(request, 'blog/create_post.html', {'form': form})
 ```
 
-**What happens:**
+**Apa yang terjadi:**
 1. User tries to access `/post/create/`
-2. If not logged in → redirect to `/login/?next=/post/create/`
-3. After login → redirect back to `/post/create/`
+2. Kalo belum login → redirect ke `/login/?next=/post/create/`
+3. After login → redirect back ke `/post/create/`
 
-## Step 6: Checking Permissions in Views
+**Magic!** ✨
+
+## Step 6: Check Permissions di Views
 
 ```python
 from django.http import HttpResponseForbidden
@@ -270,7 +220,7 @@ from django.http import HttpResponseForbidden
 def edit_post(request, slug):
     post = get_object_or_404(Post, slug=slug)
     
-    # Only author or staff can edit
+    # Cuma author atau staff yang bisa edit!
     if post.author != request.user and not request.user.is_staff:
         return HttpResponseForbidden("You cannot edit this post.")
     
@@ -286,9 +236,9 @@ def edit_post(request, slug):
     return render(request, 'blog/edit_post.html', {'form': form, 'post': post})
 ```
 
-## Step 7: Checking Auth in Templates
+## Step 7: Check Auth di Templates
 
-### Check if logged in:
+Check if logged in:
 
 ```django
 {% if user.is_authenticated %}
@@ -300,7 +250,7 @@ def edit_post(request, slug):
 {% endif %}
 ```
 
-### Check permissions:
+Check permissions:
 
 ```django
 {% if post.author == user or user.is_staff %}
@@ -309,7 +259,7 @@ def edit_post(request, slug):
 {% endif %}
 ```
 
-### Show username:
+Show user info:
 
 ```django
 {% if user.is_authenticated %}
@@ -321,106 +271,69 @@ def edit_post(request, slug):
 
 ## Step 8: Password Reset
 
-Django provides password reset views. We already added them:
-
-### In `blog_cms/urls.py`:
+Django provides password reset views. Di `blog_cms/urls.py`:
 
 ```python
 urlpatterns = [
-    # Password reset
     path('password-reset/', 
          auth_views.PasswordResetView.as_view(
              template_name='blog/password_reset.html'
-         ), 
-         name='password_reset'),
+         ), name='password_reset'),
     
     path('password-reset/done/', 
          auth_views.PasswordResetDoneView.as_view(
              template_name='blog/password_reset_done.html'
-         ), 
-         name='password_reset_done'),
+         ), name='password_reset_done'),
     
     path('password-reset-confirm/<uidb64>/<token>/', 
          auth_views.PasswordResetConfirmView.as_view(
              template_name='blog/password_reset_confirm.html'
-         ), 
-         name='password_reset_confirm'),
+         ), name='password_reset_confirm'),
     
     path('password-reset-complete/', 
          auth_views.PasswordResetCompleteView.as_view(
              template_name='blog/password_reset_complete.html'
-         ), 
-         name='password_reset_complete'),
+         ), name='password_reset_complete'),
 ]
 ```
 
-**The flow:**
+**The Flow:**
 
-1. **Password Reset** (`password_reset.html`):
-   - User enters email
-   - System sends email with reset link
+1. **Password Reset:** User enters email
+2. **Done:** Confirm email sent
+3. **Confirm:** User clicks link, enters new password
+4. **Complete:** Success!
 
-2. **Password Reset Done** (`password_reset_done.html`):
-   - Confirms email sent
-
-3. **Password Reset Confirm** (`password_reset_confirm.html`):
-   - User clicks link in email
-   - Enters new password
-
-4. **Password Reset Complete** (`password_reset_complete.html`):
-   - Password changed successfully
-
-### Password Reset Template:
-
-```html
-{% extends 'blog/base.html' %}
-
-{% block title %}Reset Password{% endblock %}
-
-{% block content %}
-<div class="auth-container">
-    <h2>Reset Password</h2>
-    <p>Enter your email address and we'll send you a link to reset your password.</p>
-    
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Send Reset Link</button>
-    </form>
-</div>
-{% endblock %}
-```
-
-### Configure Email (for development):
-
-In `settings.py`:
+Configure email (development) di `settings.py`:
 
 ```python
-# Development: Print emails to console
+# Development: Print emails ke console
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# Production: Use real email
+# Production: Use real email server
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.gmail.com'
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'your-email@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your-password'
+# EMAIL_HOST_PASSWORD = 'your-app-password'
 ```
 
 ## Step 9: Sessions
 
-Django uses sessions to remember logged-in users.
+Django pake sessions buat remember logged-in users.
 
-### How it works:
+**How it works:**
 
 1. User logs in
 2. Django creates session ID
-3. Session ID stored in cookie
-4. Cookie sent with every request
-5. Django loads user from session
+3. Session ID stored di cookie
+4. Cookie sent dengan every request
+5. Django loads user dari session
 
-### Session data:
+**Analogi:** Kayak token di localStorage JavaScript, tapi lebih secure karena HTTP-only cookies!
+
+Store data di session:
 
 ```python
 # In view
@@ -433,7 +346,7 @@ color = request.session.get('favorite_color')  # 'blue'
 del request.session['favorite_color']
 ```
 
-### Session settings:
+Session settings:
 
 ```python
 # In settings.py
@@ -444,11 +357,12 @@ SESSION_SAVE_EVERY_REQUEST = False
 
 ## Step 10: User Profile (Advanced)
 
-To add more user fields, create a Profile model:
+Buat tambahin more user fields, bikin Profile model:
 
 ```python
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -459,9 +373,7 @@ class Profile(models.Model):
     def __str__(self):
         return f'{self.user.username} Profile'
 
-# Create profile when user registers
-from django.db.models.signals import post_save
-
+# Auto-create profile when user registers
 def create_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
@@ -469,7 +381,7 @@ def create_profile(sender, instance, created, **kwargs):
 post_save.connect(create_profile, sender=User)
 ```
 
-### Access profile:
+Access profile:
 
 ```python
 # In view
@@ -482,8 +394,6 @@ bio = user.profile.bio
 ```
 
 ## Authentication Helpers
-
-### In Python:
 
 ```python
 from django.contrib.auth import authenticate, login, logout
@@ -499,8 +409,6 @@ logout(request)
 # Check if authenticated
 if request.user.is_authenticated:
     print(f'User: {request.user.username}')
-else:
-    print('Anonymous')
 
 # Check staff
 if request.user.is_staff:
@@ -508,10 +416,10 @@ if request.user.is_staff:
 
 # Check superuser
 if request.user.is_superuser:
-    print('Superuser')
+    print('Superuser - all permissions!')
 ```
 
-### Decorators:
+Decorators:
 
 ```python
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -539,15 +447,13 @@ def staff_view(request):
 
 ## Permissions System
 
-Django has built-in permissions:
-
 ```python
 # Check permission
 if user.has_perm('blog.add_post'):
-    # Can add posts
+    # Bisa add posts
     pass
 
-# Add permission in model
+# Add permission di model
 class Post(models.Model):
     class Meta:
         permissions = [
@@ -568,160 +474,112 @@ def create_post(request):
 
 ## Security Best Practices
 
-1. **Never store passwords in plain text**
-   - Django hashes automatically
-   
-2. **Use HTTPS in production**
-   ```python
-   # settings.py
-   SECURE_SSL_REDIRECT = True
-   SESSION_COOKIE_SECURE = True
-   CSRF_COOKIE_SECURE = True
-   ```
+### 1. Never Store Passwords in Plain Text
+Django hashes automatically! ✅
 
-3. **Set strong password validators**
-   ```python
-   AUTH_PASSWORD_VALIDATORS = [
-       {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-       {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-       {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-       {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-   ]
-   ```
+### 2. Use HTTPS in Production
+```python
+# settings.py
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+```
 
-4. **Protect views**
-   - Use `@login_required`
-   - Check permissions
+### 3. Strong Password Validators
+```python
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+```
 
-5. **Logout properly**
-   ```python
-   logout(request)
-   ```
+### 4. Protect Views
+Use `@login_required` and check permissions!
+
+### 5. Logout Properly
+```python
+logout(request)  # Clear session
+```
 
 ## Common Patterns
 
-### Pattern: Login and redirect to next
+### Login and Redirect to Next
 
 ```python
-from django.contrib.auth import login
-
 def login_view(request):
     if request.method == 'POST':
-        # ... authenticate user
+        # ... authenticate
         if user:
             login(request, user)
             next_url = request.GET.get('next', 'home')
             return redirect(next_url)
 ```
 
-### Pattern: Remember me
+### Remember Me
 
 ```python
 def login_view(request):
     if request.method == 'POST':
         remember = request.POST.get('remember_me')
         if not remember:
-            request.session.set_expiry(0)  # Browser close
-```
-
-### Pattern: Account activation
-
-```python
-user = form.save(commit=False)
-user.is_active = False
-user.save()
-# Send activation email
+            request.session.set_expiry(0)  # Expire at browser close
 ```
 
 ## Troubleshooting
 
-### Issue: "User is not authenticated"
+### User Not Authenticated
 Check:
-- `@login_required` decorator?
-- Logged in?
+- `@login_required` decorator added?
+- User actually logged in?
 - Session working?
 
-### Issue: Password reset email not received
+### Password Reset Email Not Received
 Check:
 - Email backend configured?
-- Check console (development)
-- Check spam folder
+- Check console (development mode)
+- Check spam folder (production)
 
-### Issue: Redirect loop
-Check:
-- `LOGIN_URL` and `LOGIN_REDIRECT_URL`
-- View not protected when it should be
-
-### Issue: "CSRF token missing"
-- Add `{% csrf_token %}` in form
-- Check middleware enabled
-
-## Testing Authentication
-
-```python
-from django.test import TestCase
-from django.contrib.auth.models import User
-
-class AuthTest(TestCase):
-    def test_register(self):
-        response = self.client.post('/register/', {
-            'username': 'testuser',
-            'password1': 'testpass123',
-            'password2': 'testpass123',
-        })
-        self.assertEqual(User.objects.count(), 1)
-    
-    def test_login(self):
-        user = User.objects.create_user('test', 'test@test.com', 'pass')
-        logged_in = self.client.login(username='test', password='pass')
-        self.assertTrue(logged_in)
-    
-    def test_protected_view(self):
-        # Without login
-        response = self.client.get('/post/create/')
-        self.assertEqual(response.status_code, 302)  # Redirect
-        
-        # With login
-        self.client.login(username='test', password='pass')
-        response = self.client.get('/post/create/')
-        self.assertEqual(response.status_code, 200)  # OK
-```
+### CSRF Token Missing
+- Add `{% csrf_token %}` in forms
+- Check CSRF middleware enabled
 
 ## Checklist
 
-Before moving on, verify:
+Sebelum lanjut:
 
 - ✅ Login view working
 - ✅ Registration working
 - ✅ Logout working
 - ✅ Password reset configured
 - ✅ `@login_required` protecting views
-- ✅ Permissions checked in views
-- ✅ Auth status shown in templates
-- ✅ User created and can log in
+- ✅ Permissions checked
+- ✅ Auth status shown di templates
 
-## What You've Learned
+## Kesimpulan
 
-- Django's User model
-- Login and logout views
-- Registration with UserCreationForm
-- Customizing registration
-- `@login_required` decorator
-- Checking permissions
-- Password reset flow
-- Sessions
-- Security best practices
+Lo udah belajar:
+
+✅ Django User model  
+✅ Login & logout  
+✅ Registration dengan UserCreationForm  
+✅ Custom registration form  
+✅ `@login_required` decorator  
+✅ Check permissions  
+✅ Password reset flow  
+✅ Sessions  
+✅ Security best practices  
+
+**Django authentication powerful!** Built-in, secure, dan production-ready!
 
 ## Next Steps
 
-Authentication is complete! Now let's learn about styling the application.
+Authentication done! Sekarang bikin aplikasi lo jadi cantik dengan CSS.
 
-**→ Continue to [09 - Styling with CSS](./09-styling-with-css.md)**
-
----
+**→ Continue to [09 - Styling](./09-styling.md)**
 
 ## Additional Resources
 
-- [Authentication Documentation](https://docs.djangoproject.com/en/stable/topics/auth/)
+- [Authentication Docs](https://docs.djangoproject.com/en/stable/topics/auth/)
 - [User Model Reference](https://docs.djangoproject.com/en/stable/ref/contrib/auth/)
-- [Password Reset Tutorial](https://docs.djangoproject.com/en/stable/topics/auth/default/#all-authentication-views)

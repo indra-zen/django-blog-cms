@@ -1,204 +1,205 @@
 # Django Blog & CMS
 
-A full-featured blog and content management system built with Django.
+Blog dan sistem manajemen konten yang lengkap, dibikin pake Django.
 
-## 📚 Learning Resources
+## 📚 Belajar Django
 
-**New to Django?** Check out our comprehensive tutorial:
+**Baru kenal Django?** Cek tutorial lengkap kita:
 
-**→ [Complete Step-by-Step Tutorial](./tutorial/TUTORIAL.md)** ←
+**→ [Tutorial Step-by-Step Lengkap](./tutorial/TUTORIAL.md)** ←  
+**→ [Panduan Mulai Belajar - Dari Frontend ke Full-Stack!](./MULAI_DI_SINI.md)** ←
 
-The tutorial covers:
-- Django basics and architecture (10 chapters)
-- Building this exact blog application
-- Step-by-step explanations with code examples
-- Best practices and troubleshooting
-- From development to deployment
+Tutorial ini mencakup:
+- Dasar-dasar Django dan arsitekturnya (10 chapter)
+- Bikin aplikasi blog ini dari awal
+- Penjelasan step-by-step dengan contoh kode
+- Best practice dan troubleshooting
+- Dari development sampai deployment
 
-Perfect for teaching friends or learning Django from scratch!
+**Cocok banget buat temen kuliah yang baru belajar HTML/CSS/JS!** Dijelasin dengan bahasa santai, banyak analogi, dan perbandingan dengan JavaScript yang lo udah tau.
 
-## 🎉 Quick Start
+## 🎉 Mulai Cepat
 
-The application is now running at: **http://localhost:8000/**
+Aplikasinya udah jalan di: **http://localhost:8000/**
 
-### Test Accounts
+### Akun Testing
 
-Sample accounts have been created for testing:
+Udah ada sample akun buat testing:
 
-**Admin Account (Full Access)**
+**Akun Admin (Akses Penuh)**
 - Username: `admin`
 - Password: `admin123`
-- Access: http://localhost:8000/admin/
+- Akses: http://localhost:8000/admin/
 
-**Author Account (Regular User)**
+**Akun Author (User Biasa)**
 - Username: `author`
 - Password: `author123`
 
-### What's Included
+### Apa Aja yang Ada
 
-✅ **5 Sample Blog Posts** with different categories  
-✅ **4 Categories:** Technology, Programming, Web Development, Data Science  
-✅ **Sample Comments** on each post (approved)  
-✅ **Full Authentication System** (login, register, password reset)  
-✅ **Responsive Design** with modern CSS
+✅ **5 Post Blog Sample** dengan kategori berbeda  
+✅ **4 Kategori:** Teknologi, Programming, Web Development, Data Science  
+✅ **Komentar Sample** di setiap post (udah disetujui)  
+✅ **Sistem Authentication Lengkap** (login, register, reset password)  
+✅ **Responsive Design** dengan CSS modern
 
-## Features
+## Fitur-fitur
 
-- **User Authentication**: Registration, login, logout, and password reset
-- **Blog Posts**: Create, edit, delete, and publish blog posts
-- **Categories**: Organize posts into categories
-- **Comments**: Users can comment on posts (with admin approval)
-- **Search**: Search through blog posts
-- **Admin Panel**: Full Django admin interface for content management
-- **Responsive Design**: Mobile-friendly layout
+- **Autentikasi User**: Daftar, login, logout, dan reset password
+- **Post Blog**: Bikin, edit, hapus, dan publish post blog
+- **Kategori**: Organisir post berdasarkan kategori
+- **Komentar**: User bisa komentar di post (harus disetujui admin)
+- **Search**: Cari post blog
+- **Panel Admin**: Interface admin Django lengkap buat manage konten
+- **Responsive Design**: Tampilan mobile-friendly
 
-## Installation & Setup
+## Instalasi & Setup
 
 1. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-2. **Set up environment variables**:
+2. **Setup environment variables**:
    ```bash
    cp .env.example .env
-   # Edit .env with your settings if needed
+   # Edit .env kalo perlu
    ```
 
-3. **Run migrations**:
+3. **Jalanin migrations**:
    ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
 
-4. **Create sample data** (optional but recommended):
+4. **Bikin sample data** (opsional tapi recommended):
    ```bash
    python manage.py create_sample_data
    ```
-   This creates test users, categories, posts, and comments.
+   Ini bakal bikin test users, kategori, post, dan komentar.
 
-5. **Create additional superuser** (optional):
+5. **Bikin superuser tambahan** (opsional):
    ```bash
    python manage.py createsuperuser
    ```
 
-6. **Run the development server**:
+6. **Jalanin development server**:
    ```bash
    python manage.py runserver
    ```
 
-7. **Access the application**:
-   - Main site: http://localhost:8000/
-   - Admin panel: http://localhost:8000/admin/
+7. **Akses aplikasinya**:
+   - Website utama: http://localhost:8000/
+   - Panel admin: http://localhost:8000/admin/
 
-## Usage Guide
+## Cara Pake
 
-### For Users
-1. ✍️ Register for an account or use test account (`author` / `author123`)
-2. 🔐 Log in to access posting features
-3. ✨ Create blog posts with featured images
-4. 💬 Add comments to posts
-5. 📝 Manage your own posts (edit/delete)
+### Buat User Biasa
+1. ✍️ Daftar akun atau pake test account (`author` / `author123`)
+2. 🔐 Login buat akses fitur posting
+3. ✨ Bikin post blog dengan featured image
+4. 💬 Tambahin komentar di post
+5. 📝 Manage post lo sendiri (edit/hapus)
 
-### For Admins
-1. 🎛️ Access the admin panel at `/admin/` (use `admin` / `admin123`)
-2. ✅ Approve/reject comments
-3. 🗂️ Manage categories
-4. 📝 Edit/delete any posts
+### Buat Admin
+1. 🎛️ Akses panel admin di `/admin/` (pake `admin` / `admin123`)
+2. ✅ Setujui/tolak komentar
+3. 🗂️ Manage kategori
+4. 📝 Edit/hapus semua post
 5. 👥 Manage users
 
-## Project Structure
+## Struktur Project
 
 ```
 /workspace/
-├── blog/                   # Main blog application
-│   ├── models.py          # Database models (Post, Comment, Category)
-│   ├── views.py           # View functions
-│   ├── forms.py           # Django forms
-│   ├── urls.py            # URL patterns
-│   ├── admin.py           # Admin configuration
-│   └── templates/         # HTML templates
+├── blog/                   # Aplikasi blog utama
+│   ├── models.py          # Model database (Post, Comment, Category)
+│   ├── views.py           # Fungsi view
+│   ├── forms.py           # Form Django
+│   ├── urls.py            # Pola URL
+│   ├── admin.py           # Konfigurasi admin
+│   └── templates/         # Template HTML
 │       └── blog/
-├── blog_cms/              # Project settings
-│   ├── settings.py        # Django settings
-│   ├── urls.py            # Root URL configuration
-│   └── wsgi.py            # WSGI configuration
-├── static/                # Static files (CSS, JS, images)
+├── blog_cms/              # Settings project
+│   ├── settings.py        # Settings Django
+│   ├── urls.py            # Konfigurasi root URL
+│   └── wsgi.py            # Konfigurasi WSGI
+├── static/                # File static (CSS, JS, gambar)
 │   └── css/
 │       └── style.css
-├── media/                 # User-uploaded files
-├── manage.py              # Django management script
-└── requirements.txt       # Python dependencies
+├── media/                 # File yang diupload user
+├── manage.py              # Script management Django
+└── requirements.txt       # Dependencies Python
 ```
 
-## Models
+## Model Database
 
 ### Post
-- Title, slug, content, excerpt
-- Author (ForeignKey to User)
-- Category (ForeignKey to Category)
+- Title, slug, konten, excerpt
+- Author (ForeignKey ke User)
+- Category (ForeignKey ke Category)
 - Featured image
 - Status (draft/published)
 - Timestamps
 
 ### Comment
-- Post (ForeignKey to Post)
-- Author (ForeignKey to User)
+- Post (ForeignKey ke Post)
+- Author (ForeignKey ke User)
 - Content
-- Approved status
+- Status approved
 - Timestamps
 
 ### Category
-- Name, slug, description
+- Name, slug, deskripsi
 - Timestamp
 
-## Configuration
+## Konfigurasi
 
 ### Database
-By default, the project uses SQLite. To use PostgreSQL:
+Defaultnya pake SQLite. Kalo mau pake PostgreSQL:
 
 1. Update `.env`:
    ```
    DB_ENGINE=django.db.backends.postgresql
    DB_NAME=blog_cms_db
    DB_USER=postgres
-   DB_PASSWORD=your_password
+   DB_PASSWORD=password_lo
    DB_HOST=localhost
    DB_PORT=5432
    ```
 
-2. Ensure PostgreSQL is running and the database exists
+2. Pastiin PostgreSQL udah jalan dan databasenya udah ada
 
-### Static Files
-- Development: Static files served automatically by Django
-- Production: Run `python manage.py collectstatic` and configure web server
+### File Static
+- Development: File static di-serve otomatis sama Django
+- Production: Jalanin `python manage.py collectstatic` dan configure web server
 
-### Media Files
-User-uploaded files (post images) are stored in the `media/` directory
+### File Media
+File yang diupload user (gambar post) disimpan di folder `media/`
 
 ## Development
 
-### Common Commands
+### Command yang Sering Dipake
 
 ```bash
-# Create sample data
+# Bikin sample data
 python manage.py create_sample_data
 
-# Run migrations
+# Jalanin migrations
 python manage.py makemigrations
 python manage.py migrate
 
-# Create superuser
+# Bikin superuser
 python manage.py createsuperuser
 
-# Collect static files (for production)
+# Collect static files (buat production)
 python manage.py collectstatic --noinput
 
-# Run development server
+# Jalanin development server
 python manage.py runserver
 ```
 
-### Running Tests
+### Jalanin Tests
 ```bash
 python manage.py test
 ```
@@ -215,18 +216,18 @@ pylint blog/
 
 ## Production Deployment
 
-1. Set `DEBUG=False` in `.env`
-2. Update `ALLOWED_HOSTS` with your domain
-3. Set a strong `SECRET_KEY`
-4. Configure a production database (PostgreSQL recommended)
-5. Set up a web server (nginx/Apache) with Gunicorn/uWSGI
-6. Configure static and media file serving
-7. Set up SSL/TLS certificates
+1. Set `DEBUG=False` di `.env`
+2. Update `ALLOWED_HOSTS` dengan domain lo
+3. Set `SECRET_KEY` yang kuat
+4. Configure production database (PostgreSQL recommended)
+5. Setup web server (nginx/Apache) dengan Gunicorn/uWSGI
+6. Configure serving file static dan media
+7. Setup SSL/TLS certificates
 
 ## License
 
-This project is open source and available under the MIT License.
+Project ini open source dan tersedia di bawah MIT License.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit pull requests.
+Kontribusi welcome banget! Silakan submit pull request.

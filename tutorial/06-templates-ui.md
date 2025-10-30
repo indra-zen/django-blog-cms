@@ -1,27 +1,45 @@
-# Tutorial 06: Templates and UI
+# Tutorial 06: Templates dan UI
 
-## What You'll Learn
+## Apa yang Bakal Lo Pelajari
 
-- Django template language basics
-- Template inheritance with base templates
-- Template tags and filters
-- Creating reusable templates
-- Displaying dynamic data
-- Working with forms in templates
-- Creating navigation and layout
+- Template language Django (bukan React/Vue, tapi powerful juga!)
+- Template inheritance buat reusable layout
+- Template tags dan filters
+- Display dynamic data
+- Forms di templates
+- Navigation dan layout
 
-## Understanding Templates
+## Apa Itu Templates?
 
-Templates are HTML files with special Django syntax for:
-- Displaying variables: `{{ variable }}`
+Templates itu HTML files dengan special syntax Django buat:
+- Nampilin variables: `{{ variable }}`
 - Logic/loops: `{% if %} {% for %}`
-- Template inheritance: `{% extends %} {% block %}`
+- Inheritance: `{% extends %} {% block %}`
 
-## Template Directory Structure
+### Analogi
+
+Bayangin lo bikin website pake JavaScript:
+```javascript
+// Di JS lo pake template literals
+const html = `
+  <h1>${title}</h1>
+  <p>${content}</p>
+`;
+```
+
+Di Django templates:
+```django
+<h1>{{ title }}</h1>
+<p>{{ content }}</p>
+```
+
+**Mirip kan?** Bedanya Django render di **server**, bukan di browser!
+
+## Struktur Directory Templates
 
 ```
 blog/templates/blog/
-├── base.html              # Base layout
+├── base.html              # Base layout (kayak App.js di React)
 ├── home.html              # Homepage
 ├── post_detail.html       # Post detail
 ├── create_post.html       # Create post
@@ -34,7 +52,14 @@ blog/templates/blog/
 └── password_reset*.html   # Password reset pages
 ```
 
-## Step 1: Create Base Template
+**Kenapa `blog/templates/blog/`?**
+- Django cari templates di semua apps
+- Double nesting prevents name conflicts
+- Best practice Django!
+
+## Step 1: Bikin Base Template
+
+Ini kayak **layout utama** yang dipake semua page.
 
 Create `blog/templates/blog/base.html`:
 
@@ -96,52 +121,86 @@ Create `blog/templates/blog/base.html`:
 </html>
 ```
 
-### Understanding Base Template
+### Penjelasan Base Template
 
-**Load Static Files:**
+**1. Load Static Files**
 ```django
 {% load static %}
 <link rel="stylesheet" href="{% static 'css/style.css' %}">
 ```
-Loads static file from `static/css/style.css`.
+Loads CSS dari `static/css/style.css`.
 
-**Block Tags:**
+**Analogi JavaScript:**
+```javascript
+import './style.css';  // Di React
+```
+
+**2. Block Tags**
 ```django
 {% block title %}Blog CMS{% endblock %}
 ```
-Child templates can override this block.
+Child templates bisa override block ini!
 
-**URL Tag:**
+**Analogi React:**
+```jsx
+// Base component
+function Layout({ title, children }) {
+  return (
+    <>
+      <title>{title || 'Blog CMS'}</title>
+      {children}
+    </>
+  );
+}
+```
+
+**3. URL Tag**
 ```django
 <a href="{% url 'home' %}">Home</a>
 ```
-Generates URL from URL name (no hard-coding!).
+Generate URL dari name (NO HARDCODING!).
 
-**If Statement:**
+**Kenapa?** Kalo lo ganti `/home/` jadi `/homepage/`, cukup update URLs.py. Template ga perlu diubah!
+
+**4. If Statement**
 ```django
 {% if user.is_authenticated %}
-    ...
+    <span>Hello, {{ user.username }}</span>
 {% else %}
-    ...
+    <a href="{% url 'login' %}">Login</a>
 {% endif %}
 ```
-Show different content for logged-in users.
 
-**For Loop:**
+**Analogi JavaScript:**
+```jsx
+{user.isAuthenticated ? (
+  <span>Hello, {user.username}</span>
+) : (
+  <a href="/login">Login</a>
+)}
+```
+
+**5. For Loop**
 ```django
 {% for message in messages %}
-    {{ message }}
+    <div>{{ message }}</div>
 {% endfor %}
 ```
-Loop through messages from views.
 
-**Variables:**
+**Analogi JavaScript:**
+```jsx
+{messages.map(message => (
+  <div key={message.id}>{message}</div>
+))}
+```
+
+**6. Variables**
 ```django
 {{ user.username }}
 ```
-Display variable value.
+Display variable value. Auto-escaped untuk security!
 
-## Step 2: Create Home Template
+## Step 2: Bikin Home Template
 
 Create `blog/templates/blog/home.html`:
 
@@ -231,38 +290,61 @@ Create `blog/templates/blog/home.html`:
 {% endblock %}
 ```
 
-### Understanding Home Template
+### Penjelasan Home Template
 
-**Template Inheritance:**
+**1. Template Inheritance**
 ```django
 {% extends 'blog/base.html' %}
 ```
-This template inherits from `base.html`.
+Inherit dari `base.html`. Content masuk ke `{% block content %}`.
 
-**Accessing Nested Attributes:**
+**2. Accessing Nested Attributes**
 ```django
 {{ post.author.username }}
 {{ post.category.name }}
 ```
-Dot notation accesses related objects.
+Pake dot notation buat access related objects!
 
-**Template Filters:**
+**Analogi JavaScript:**
+```javascript
+post.author.username
+post.category.name
+```
+
+**3. Template Filters**
 ```django
 {{ post.published_at|date:"F d, Y" }}
 {{ post.content|truncatewords:30 }}
 ```
-- `|date:"format"`: Format date
-- `|truncatewords:30`: Show first 30 words
 
-**Form with GET:**
+Filters = pipe (`|`) function buat transform data.
+
+- `|date:"F d, Y"` → Format date jadi "October 30, 2025"
+- `|truncatewords:30` → Ambil 30 kata pertama
+
+**Analogi JavaScript:**
+```javascript
+// date filter
+new Date(post.published_at).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+
+// truncatewords filter
+post.content.split(' ').slice(0, 30).join(' ');
+```
+
+**4. Form dengan GET**
 ```django
 <form method="get" action="{% url 'home' %}">
     <input type="text" name="q" value="{{ search_query }}">
 </form>
 ```
-Sends data as URL parameters.
 
-**Pagination:**
+Sends data as URL parameters: `?q=django&category=tech`
+
+**5. Pagination**
 ```django
 {% if page_obj.has_other_pages %}
     {% if page_obj.has_previous %}
@@ -271,7 +353,13 @@ Sends data as URL parameters.
 {% endif %}
 ```
 
-## Step 3: Create Post Detail Template
+Django paginator provides:
+- `page_obj.number` - Current page
+- `page_obj.paginator.num_pages` - Total pages
+- `page_obj.has_previous/has_next` - Boolean
+- `page_obj.previous_page_number/next_page_number` - Page numbers
+
+## Step 3: Bikin Post Detail Template
 
 Create `blog/templates/blog/post_detail.html`:
 
@@ -354,32 +442,42 @@ Create `blog/templates/blog/post_detail.html`:
 {% endblock %}
 ```
 
-### Understanding Post Detail
+### Penjelasan Post Detail
 
-**Permission Check:**
+**1. Permission Check**
 ```django
 {% if user == post.author or user.is_staff %}
     <a href="{% url 'edit_post' post.slug %}">Edit</a>
 {% endif %}
 ```
-Only show edit button to author or staff.
+Cuma author atau staff yang bisa edit!
 
-**CSRF Token:**
+**2. CSRF Token**
 ```django
 <form method="post">
     {% csrf_token %}
     ...
 </form>
 ```
-Required for all POST forms! Prevents CSRF attacks.
 
-**Display Form:**
+**WAJIB!** Buat semua POST forms. Prevents CSRF attacks.
+
+**Apa itu CSRF?** Cross-Site Request Forgery = orang jahat bikin form palsu buat submit data atas nama lo.
+
+CSRF token = unique random token yang di-generate Django. Kalo ga match, request ditolak!
+
+**3. Display Form**
 ```django
 {{ comment_form.as_p }}
 ```
-Renders form fields wrapped in `<p>` tags.
+Renders all form fields wrapped in `<p>` tags.
 
-**Empty For Loop:**
+Options lain:
+- `form.as_table` - Wrapped in `<tr>` tags
+- `form.as_ul` - Wrapped in `<li>` tags
+- Manual: `{{ form.field_name }}`
+
+**4. Empty For Loop**
 ```django
 {% for comment in comments %}
     {{ comment.content }}
@@ -387,23 +485,45 @@ Renders form fields wrapped in `<p>` tags.
     <p>No comments yet!</p>
 {% endfor %}
 ```
-Shows "No comments" if list is empty.
 
-**linebreaks Filter:**
+**Keren!** Ga perlu if statement terpisah buat check empty.
+
+**Analogi JavaScript:**
+```jsx
+{comments.length > 0 ? (
+  comments.map(c => <div>{c.content}</div>)
+) : (
+  <p>No comments yet!</p>
+)}
+```
+
+**5. linebreaks Filter**
 ```django
 {{ post.content|linebreaks }}
 ```
-Converts line breaks to `<br>` tags.
+Converts line breaks to `<br>` or `<p>` tags.
 
-**Login with Redirect:**
+**Input:**
+```
+Hello world
+This is a test
+```
+
+**Output:**
+```html
+<p>Hello world<br>This is a test</p>
+```
+
+**6. Login with Redirect**
 ```django
 <a href="{% url 'login' %}?next={{ request.path }}">Login</a>
 ```
-After login, redirect back to this page.
 
-## Step 4: Create Form Templates
+After login, Django redirects ke URL di `next` parameter. User ga perlu navigate lagi!
 
-### Create Post Template
+## Step 4: Bikin Form Templates
+
+### Create Post
 
 Create `blog/templates/blog/create_post.html`:
 
@@ -428,9 +548,11 @@ Create `blog/templates/blog/create_post.html`:
 {% endblock %}
 ```
 
-**Important:** `enctype="multipart/form-data"` is required for file uploads!
+**PENTING:** `enctype="multipart/form-data"` **WAJIB** buat file uploads!
 
-### Edit Post Template
+Tanpa ini, file uploads ga bakal work! 😱
+
+### Edit Post
 
 Create `blog/templates/blog/edit_post.html`:
 
@@ -484,9 +606,11 @@ Create `blog/templates/blog/delete_post.html`:
 {% endblock %}
 ```
 
-## Step 5: Create User Templates
+Best practice: **Always confirm** sebelum delete! User bisa salah klik.
 
-### User Posts Template
+## Step 5: User Templates
+
+### My Posts
 
 Create `blog/templates/blog/user_posts.html`:
 
@@ -536,11 +660,9 @@ Create `blog/templates/blog/user_posts.html`:
                     {% if page_obj.has_previous %}
                         <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
                     {% endif %}
-
                     <span class="current-page">
                         Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
                     </span>
-
                     {% if page_obj.has_next %}
                         <a href="?page={{ page_obj.next_page_number }}">Next</a>
                     {% endif %}
@@ -555,11 +677,11 @@ Create `blog/templates/blog/user_posts.html`:
 {% endblock %}
 ```
 
-**Understanding:**
-- `{{ post.get_status_display }}`: Shows "Published" instead of "published"
-- `{{ post.category|default:"Uncategorized" }}`: Shows default if None
+**Penjelasan baru:**
+- `{{ post.get_status_display }}` - Shows "Published" instead of "published" (human-readable!)
+- `{{ post.category|default:"Uncategorized" }}` - Shows default kalo value None
 
-### Category Posts Template
+### Category Posts
 
 Create `blog/templates/blog/category_posts.html`:
 
@@ -623,7 +745,7 @@ Create `blog/templates/blog/category_posts.html`:
 
 ## Step 6: Authentication Templates
 
-### Login Template
+### Login
 
 Create `blog/templates/blog/login.html`:
 
@@ -650,7 +772,7 @@ Create `blog/templates/blog/login.html`:
 {% endblock %}
 ```
 
-### Register Template
+### Register
 
 Create `blog/templates/blog/register.html`:
 
@@ -678,9 +800,9 @@ Create `blog/templates/blog/register.html`:
 
 ### Password Reset Templates
 
-Create these four files for password reset flow:
+Create 4 files buat password reset flow:
 
-**`blog/templates/blog/password_reset.html`:**
+**1. `blog/templates/blog/password_reset.html`:**
 ```django
 {% extends 'blog/base.html' %}
 {% block title %}Password Reset - Blog CMS{% endblock %}
@@ -700,7 +822,7 @@ Create these four files for password reset flow:
 {% endblock %}
 ```
 
-**`blog/templates/blog/password_reset_done.html`:**
+**2. `blog/templates/blog/password_reset_done.html`:**
 ```django
 {% extends 'blog/base.html' %}
 {% block title %}Password Reset Sent - Blog CMS{% endblock %}
@@ -715,7 +837,7 @@ Create these four files for password reset flow:
 {% endblock %}
 ```
 
-**`blog/templates/blog/password_reset_confirm.html`:**
+**3. `blog/templates/blog/password_reset_confirm.html`:**
 ```django
 {% extends 'blog/base.html' %}
 {% block title %}Set New Password - Blog CMS{% endblock %}
@@ -731,7 +853,7 @@ Create these four files for password reset flow:
 {% endblock %}
 ```
 
-**`blog/templates/blog/password_reset_complete.html`:**
+**4. `blog/templates/blog/password_reset_complete.html`:**
 ```django
 {% extends 'blog/base.html' %}
 {% block title %}Password Reset Complete - Blog CMS{% endblock %}
@@ -746,14 +868,14 @@ Create these four files for password reset flow:
 {% endblock %}
 ```
 
-## Common Template Tags & Filters
+## Template Tags & Filters Cheat Sheet
 
 ### Template Tags
 
 ```django
 {% load static %}              # Load static files
 {% url 'name' %}               # Reverse URL
-{% url 'name' arg %}           # URL with argument
+{% url 'name' arg %}           # URL dengan argument
 {% csrf_token %}               # CSRF protection
 {% if condition %}...{% endif %} # Conditional
 {% for item in list %}...{% endfor %} # Loop
@@ -767,8 +889,8 @@ Create these four files for password reset flow:
 ### Filters
 
 ```django
-{{ value|default:"text" }}     # Default if None
-{{ text|truncatewords:30 }}    # First 30 words
+{{ value|default:"text" }}     # Default kalo None
+{{ text|truncatewords:30 }}    # 30 kata pertama
 {{ text|linebreaks }}          # Convert breaks to <br>
 {{ date|date:"F d, Y" }}       # Format date
 {{ text|length }}              # Length
@@ -777,59 +899,155 @@ Create these four files for password reset flow:
 {{ text|title }}               # Title Case
 {{ text|capfirst }}            # Capitalize first
 {{ number|add:5 }}             # Add 5
-{{ list|join:", " }}           # Join with comma
+{{ list|join:", " }}           # Join dengan comma
 {{ text|safe }}                # Mark as safe HTML
 {{ text|escape }}              # Escape HTML
 ```
 
 ## Template Best Practices
 
-1. **Always use {% csrf_token %}** in POST forms
-2. **Use {% url %}** instead of hard-coded paths
-3. **Use template inheritance** (DRY principle)
-4. **Keep logic in views**, not templates
-5. **Use descriptive block names**
-6. **Comment complex template logic**
-7. **Escape user input** (Django does this by default)
+### 1. Always Use {% csrf_token %} di POST Forms
+```django
+# ❌ BAD - Security risk!
+<form method="post">
+    {{ form.as_p }}
+</form>
+
+# ✅ GOOD
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+</form>
+```
+
+### 2. Use {% url %} Instead of Hard-Coded Paths
+```django
+# ❌ BAD - Hard to maintain
+<a href="/posts/create/">Create</a>
+
+# ✅ GOOD - Dynamic
+<a href="{% url 'create_post' %}">Create</a>
+```
+
+### 3. Use Template Inheritance (DRY!)
+```django
+# ❌ BAD - Repeat header/footer di setiap file
+<!DOCTYPE html>
+<html>
+  <head>...</head>
+  <body>
+    <nav>...</nav>
+    <!-- Content here -->
+    <footer>...</footer>
+  </body>
+</html>
+
+# ✅ GOOD - Inherit dari base
+{% extends 'blog/base.html' %}
+{% block content %}
+  <!-- Content here -->
+{% endblock %}
+```
+
+### 4. Keep Logic di Views, Bukan Templates
+```django
+# ❌ BAD - Complex logic di template
+{% if user.is_authenticated and user.is_staff or user == post.author and post.status == 'published' %}
+  ...
+{% endif %}
+
+# ✅ GOOD - Logic di view
+# view.py
+context['can_edit'] = user_can_edit_post(user, post)
+
+# template
+{% if can_edit %}
+  ...
+{% endif %}
+```
+
+### 5. Use Descriptive Block Names
+```django
+# ❌ BAD
+{% block b1 %}...{% endblock %}
+
+# ✅ GOOD
+{% block main_content %}...{% endblock %}
+```
+
+### 6. Comment Complex Template Logic
+```django
+{# Loop through published posts and display featured ones first #}
+{% for post in posts %}
+  ...
+{% endfor %}
+```
+
+### 7. Escape User Input (Django Does This by Default!)
+```django
+# By default, Django auto-escapes:
+{{ user_input }}  # <script> becomes &lt;script&gt;
+
+# Only use |safe kalo lo YAKIN HTML-nya safe:
+{{ trusted_html|safe }}
+```
 
 ## Troubleshooting
 
-### Issue: "TemplateDoesNotExist"
-- Check file path: `blog/templates/blog/filename.html`
-- Verify app is in `INSTALLED_APPS`
-- Check template name in `render()` call
+### TemplateDoesNotExist
+**Error:** `TemplateDoesNotExist at /posts/`
 
-### Issue: Static files not loading
-- Run: `python manage.py collectstatic`
-- Check `STATIC_URL` and `STATIC_ROOT` in settings
-- Make sure `{% load static %}` is at top of template
+**Solusi:**
+1. Check file path: `blog/templates/blog/filename.html` (double nesting!)
+2. Verify app ada di `INSTALLED_APPS`
+3. Check template name di `render()` call
 
-### Issue: Images not displaying
-- Check `MEDIA_URL` and `MEDIA_ROOT` in settings
-- Verify media URLs are in `urls.py`
-- Use `{{ post.featured_image.url }}` not just `{{ post.featured_image }}`
+### Static Files Ga Load
+**Error:** CSS/images ga muncul
 
-### Issue: CSRF token missing
-- Add `{% csrf_token %}` inside `<form method="post">`
-- Make sure form uses POST method
+**Solusi:**
+1. Run: `python manage.py collectstatic`
+2. Check `STATIC_URL` dan `STATIC_ROOT` di settings
+3. Pastiin `{% load static %}` ada di top of template
 
-### Issue: URL reverse not found
-- Check URL name in `urls.py` matches template
-- Verify app URLs are included in main `urls.py`
+### Images Ga Displaying
+**Error:** Featured images not showing
+
+**Solusi:**
+1. Check `MEDIA_URL` dan `MEDIA_ROOT` di settings
+2. Verify media URLs added di `urls.py`
+3. Use `{{ post.featured_image.url }}` not `{{ post.featured_image }}`
+
+### CSRF Token Missing
+**Error:** `CSRF verification failed`
+
+**Solusi:**
+1. Add `{% csrf_token %}` inside `<form method="post">`
+2. Pastiin form pake POST method
+3. Check `django.middleware.csrf.CsrfViewMiddleware` ada di settings
+
+### URL Reverse Not Found
+**Error:** `NoReverseMatch at /posts/create/`
+
+**Solusi:**
+1. Check URL name di `urls.py` matches template
+2. Verify app URLs included di main `urls.py`
+3. Check argument count matches
 
 ## Testing Your Templates
 
-1. **Visit homepage:** Should show posts list
-2. **Click on a post:** Should show post detail
-3. **Try logging in:** Should redirect properly
-4. **Create a post:** Form should work
-5. **Check responsive:** Resize browser window
+1. **Homepage:** Should show posts list with pagination
+2. **Post detail:** Should show full post + comments
+3. **Login/register:** Should work and redirect
+4. **Create post:** Form should validate
+5. **Edit/delete:** Only owner/staff can access
+6. **Responsive:** Resize browser window
 
 ## Checklist
 
-Before moving on, verify:
+Before moving on:
 
-- ✅ Base template created with navigation
+- ✅ Base template created dengan navigation
 - ✅ All page templates created
 - ✅ Template inheritance working
 - ✅ Static files loading
@@ -837,25 +1055,28 @@ Before moving on, verify:
 - ✅ Forms displaying properly
 - ✅ Messages showing up
 - ✅ Authentication templates work
+- ✅ CSRF tokens di semua POST forms
 
-## What You've Learned
+## Kesimpulan
 
-- Django template language syntax
-- Template inheritance with extends/blocks
-- Template tags (url, if, for, etc.)
-- Template filters (date, truncate, etc.)
-- Displaying forms in templates
-- CSRF protection
-- Navigation and layout structure
-- Conditional rendering
+Lo udah belajar:
+
+✅ Django template language syntax  
+✅ Template inheritance (extends/blocks)  
+✅ Template tags (url, if, for, dll)  
+✅ Template filters (date, truncate, dll)  
+✅ Display forms di templates  
+✅ CSRF protection  
+✅ Navigation dan layout structure  
+✅ Conditional rendering  
+
+**Template system Django powerful!** Ga perlu React/Vue buat dynamic pages. Django templates cukup buat most use cases!
 
 ## Next Steps
 
-Templates are done! Now let's create the forms for creating and editing posts.
+Templates done! Sekarang bikin forms buat create/edit posts.
 
 **→ Continue to [07 - Forms](./07-forms.md)**
-
----
 
 ## Additional Resources
 

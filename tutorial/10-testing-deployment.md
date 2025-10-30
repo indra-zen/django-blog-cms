@@ -1,50 +1,139 @@
 # Tutorial 10: Testing & Deployment
 
-## What You'll Learn
+## Apa yang Bakal Lo Pelajari
 
-- Writing Django tests
-- Test-driven development
-- Deploying to production
-- Security considerations
-- Performance optimization
-- Monitoring and maintenance
+- Writing tests di Django
+- Running tests
+- Deployment ke production
+- Production settings
 
-## Understanding Testing
+## Part 1: Testing
 
-**Why Test?**
+### Kenapa Testing?
+
 - Catch bugs early
-- Confidence in changes
-- Documentation (tests show how code works)
-- Prevent regressions
-
-**Types of Tests:**
-1. **Unit Tests**: Test individual functions/methods
-2. **Integration Tests**: Test components together
-3. **Functional Tests**: Test user workflows
-
-## Django Testing Basics
-
-Django uses Python's `unittest` framework.
+- Confidence saat refactor
+- Documentation (tests show gimana code should work)
 
 ### Test File Structure
 
 ```
-blog/
-├── tests/
-│   ├── __init__.py
-│   ├── test_models.py
-│   ├── test_views.py
-│   ├── test_forms.py
-│   └── test_urls.py
+blog/tests/
+  __init__.py
+  test_models.py
+  test_views.py
+  test_forms.py
 ```
 
-Or single file:
-```
-blog/
-├── tests.py
+### Test Models
+
+`blog/tests/test_models.py`:
+
+```python
+from django.test import TestCase
+from django.contrib.auth.models import User
+from blog.models import Category, Post
+
+class CategoryModelTest(TestCase):
+    def test_category_creation(self):
+        category = Category.objects.create(
+            name="Tech",
+            description="Technology posts"
+        )
+        self.assertEqual(str(category), "Tech")
+        self.assertEqual(category.slug, "tech")
+
+class PostModelTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('test', 'test@test.com', 'pass')
+        self.category = Category.objects.create(name="Tech")
+    
+    def test_post_creation(self):
+        post = Post.objects.create(
+            title="Test Post",
+            content="Content here",
+            author=self.user,
+            category=self.category,
+            status='published'
+        )
+        self.assertEqual(str(post), "Test Post")
+        self.assertTrue(post.slug)
 ```
 
-### Running Tests
+### Test Views
+
+`blog/tests/test_views.py`:
+
+```python
+from django.test import TestCase, Client
+from django.urls import reverse
+from django.contrib.auth.models import User
+from blog.models import Post, Category
+
+class HomeViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('test', 'test@test.com', 'pass')
+        self.category = Category.objects.create(name="Tech")
+    
+    def test_home_page_status(self):
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 200)
+    
+    def test_home_uses_correct_template(self):
+        response = self.client.get(reverse('home'))
+        self.assertTemplateUsed(response, 'blog/home.html')
+
+class CreatePostViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('test', 'test@test.com', 'pass')
+        self.category = Category.objects.create(name="Tech")
+    
+    def test_create_post_requires_login(self):
+        response = self.client.get(reverse('create_post'))
+        self.assertEqual(response.status_code, 302)  # Redirect
+    
+    def test_create_post_with_login(self):
+        self.client.login(username='test', password='pass')
+        response = self.client.post(reverse('create_post'), {
+            'title': 'Test Post',
+            'content': 'A' * 100,
+            'category': self.category.id,
+            'status': 'draft'
+        })
+        self.assertEqual(Post.objects.count(), 1)
+```
+
+### Test Forms
+
+`blog/tests/test_forms.py`:
+
+```python
+from django.test import TestCase
+from blog.forms import PostForm
+from blog.models import Category
+
+class PostFormTest(TestCase):
+    def test_post_form_valid(self):
+        category = Category.objects.create(name="Tech")
+        form = PostForm(data={
+            'title': 'Test Post',
+            'content': 'A' * 100,
+            'category': category.id,
+            'status': 'draft'
+        })
+        self.assertTrue(form.is_valid())
+    
+    def test_post_form_invalid_short_content(self):
+        form = PostForm(data={
+            'title': 'Test',
+            'content': 'Too short',  # < 50 chars
+        })
+        self.assertFalse(form.is_valid())
+```
+
+### Run Tests
 
 ```bash
 # Run all tests
@@ -56,518 +145,49 @@ python manage.py test blog
 # Run specific test file
 python manage.py test blog.tests.test_models
 
-# Run specific test
-python manage.py test blog.tests.test_models.PostModelTest.test_slug_generation
+# Run specific test class
+python manage.py test blog.tests.test_models.PostModelTest
 
-# Verbose output
-python manage.py test --verbosity=2
-
-# Keep test database
-python manage.py test --keepdb
-```
-
-## Step 1: Testing Models
-
-Create `blog/tests/test_models.py`:
-
-```python
-from django.test import TestCase
-from django.contrib.auth.models import User
-from blog.models import Category, Post, Comment
-
-
-class CategoryModelTest(TestCase):
-    """Test Category model"""
-    
-    def setUp(self):
-        """Run before each test"""
-        self.category = Category.objects.create(
-            name='Technology',
-            description='Tech posts'
-        )
-    
-    def test_category_creation(self):
-        """Test category is created correctly"""
-        self.assertEqual(self.category.name, 'Technology')
-        self.assertEqual(self.category.description, 'Tech posts')
-        self.assertTrue(isinstance(self.category, Category))
-    
-    def test_slug_generation(self):
-        """Test slug is auto-generated"""
-        self.assertEqual(self.category.slug, 'technology')
-    
-    def test_slug_uniqueness(self):
-        """Test duplicate names get unique slugs"""
-        category2 = Category.objects.create(name='Technology')
-        self.assertNotEqual(self.category.slug, category2.slug)
-    
-    def test_str_method(self):
-        """Test string representation"""
-        self.assertEqual(str(self.category), 'Technology')
-
-
-class PostModelTest(TestCase):
-    """Test Post model"""
-    
-    def setUp(self):
-        """Create test data"""
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
-        self.category = Category.objects.create(name='Tech')
-        self.post = Post.objects.create(
-            title='Test Post',
-            content='Test content that is long enough to be valid.',
-            author=self.user,
-            category=self.category,
-            status='published'
-        )
-    
-    def test_post_creation(self):
-        """Test post is created correctly"""
-        self.assertEqual(self.post.title, 'Test Post')
-        self.assertEqual(self.post.author, self.user)
-        self.assertEqual(self.post.category, self.category)
-    
-    def test_slug_generation(self):
-        """Test slug generated from title"""
-        self.assertEqual(self.post.slug, 'test-post')
-    
-    def test_published_posts(self):
-        """Test published posts query"""
-        draft_post = Post.objects.create(
-            title='Draft',
-            content='Draft content' * 10,
-            author=self.user,
-            category=self.category,
-            status='draft'
-        )
-        published = Post.published.all()
-        self.assertIn(self.post, published)
-        self.assertNotIn(draft_post, published)
-    
-    def test_approved_comments(self):
-        """Test approved_comments property"""
-        # Create approved comment
-        Comment.objects.create(
-            post=self.post,
-            author=self.user,
-            content='Approved comment',
-            approved=True
-        )
-        # Create unapproved comment
-        Comment.objects.create(
-            post=self.post,
-            author=self.user,
-            content='Unapproved comment',
-            approved=False
-        )
-        self.assertEqual(self.post.approved_comments.count(), 1)
-
-
-class CommentModelTest(TestCase):
-    """Test Comment model"""
-    
-    def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
-        self.category = Category.objects.create(name='Tech')
-        self.post = Post.objects.create(
-            title='Test Post',
-            content='Content' * 20,
-            author=self.user,
-            category=self.category
-        )
-        self.comment = Comment.objects.create(
-            post=self.post,
-            author=self.user,
-            content='Test comment'
-        )
-    
-    def test_comment_creation(self):
-        """Test comment is created correctly"""
-        self.assertEqual(self.comment.post, self.post)
-        self.assertEqual(self.comment.author, self.user)
-        self.assertFalse(self.comment.approved)  # Default is False
-    
-    def test_str_method(self):
-        """Test string representation"""
-        expected = f'Comment by {self.user.username} on {self.post.title}'
-        self.assertEqual(str(self.comment), expected)
-```
-
-### Understanding Test Methods
-
-**setUp()**: Runs before each test
-```python
-def setUp(self):
-    self.user = User.objects.create_user(...)
-```
-
-**Assertions:**
-```python
-self.assertEqual(a, b)          # a == b
-self.assertNotEqual(a, b)       # a != b
-self.assertTrue(x)              # bool(x) is True
-self.assertFalse(x)             # bool(x) is False
-self.assertIn(a, b)             # a in b
-self.assertNotIn(a, b)          # a not in b
-self.assertIsNone(x)            # x is None
-self.assertIsNotNone(x)         # x is not None
-self.assertRaises(Exception)    # Code raises exception
-```
-
-## Step 2: Testing Views
-
-Create `blog/tests/test_views.py`:
-
-```python
-from django.test import TestCase, Client
-from django.urls import reverse
-from django.contrib.auth.models import User
-from blog.models import Category, Post
-
-
-class HomeViewTest(TestCase):
-    """Test home view"""
-    
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
-        self.category = Category.objects.create(name='Tech')
-        
-        # Create published post
-        self.post = Post.objects.create(
-            title='Published Post',
-            content='Content' * 20,
-            author=self.user,
-            category=self.category,
-            status='published'
-        )
-        
-        # Create draft post
-        self.draft = Post.objects.create(
-            title='Draft Post',
-            content='Content' * 20,
-            author=self.user,
-            category=self.category,
-            status='draft'
-        )
-    
-    def test_home_view_status_code(self):
-        """Test home page loads"""
-        response = self.client.get(reverse('home'))
-        self.assertEqual(response.status_code, 200)
-    
-    def test_home_view_uses_correct_template(self):
-        """Test correct template used"""
-        response = self.client.get(reverse('home'))
-        self.assertTemplateUsed(response, 'blog/home.html')
-    
-    def test_home_view_shows_published_posts(self):
-        """Test only published posts shown"""
-        response = self.client.get(reverse('home'))
-        self.assertContains(response, 'Published Post')
-        self.assertNotContains(response, 'Draft Post')
-    
-    def test_home_view_search(self):
-        """Test search functionality"""
-        response = self.client.get(reverse('home') + '?q=Published')
-        self.assertContains(response, 'Published Post')
-        self.assertNotContains(response, 'Draft Post')
-
-
-class PostDetailViewTest(TestCase):
-    """Test post detail view"""
-    
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
-        self.category = Category.objects.create(name='Tech')
-        self.post = Post.objects.create(
-            title='Test Post',
-            content='Content' * 20,
-            author=self.user,
-            category=self.category,
-            status='published'
-        )
-    
-    def test_post_detail_view(self):
-        """Test post detail page loads"""
-        response = self.client.get(
-            reverse('post_detail', kwargs={'slug': self.post.slug})
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Test Post')
-    
-    def test_post_detail_404(self):
-        """Test 404 for non-existent post"""
-        response = self.client.get(
-            reverse('post_detail', kwargs={'slug': 'nonexistent'})
-        )
-        self.assertEqual(response.status_code, 404)
-
-
-class CreatePostViewTest(TestCase):
-    """Test create post view"""
-    
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
-        self.category = Category.objects.create(name='Tech')
-    
-    def test_create_post_requires_login(self):
-        """Test redirect if not logged in"""
-        response = self.client.get(reverse('create_post'))
-        self.assertEqual(response.status_code, 302)  # Redirect
-        self.assertIn('/login/', response.url)
-    
-    def test_create_post_logged_in(self):
-        """Test create post when logged in"""
-        self.client.login(username='testuser', password='testpass123')
-        response = self.client.get(reverse('create_post'))
-        self.assertEqual(response.status_code, 200)
-    
-    def test_create_post_submission(self):
-        """Test creating a post"""
-        self.client.login(username='testuser', password='testpass123')
-        response = self.client.post(reverse('create_post'), {
-            'title': 'New Post',
-            'content': 'New content' * 20,
-            'category': self.category.id,
-            'status': 'draft',
-        })
-        self.assertEqual(response.status_code, 302)  # Redirect after success
-        self.assertTrue(Post.objects.filter(title='New Post').exists())
-
-
-class EditPostViewTest(TestCase):
-    """Test edit post view"""
-    
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
-        self.other_user = User.objects.create_user(
-            username='otheruser',
-            password='testpass123'
-        )
-        self.category = Category.objects.create(name='Tech')
-        self.post = Post.objects.create(
-            title='Test Post',
-            content='Content' * 20,
-            author=self.user,
-            category=self.category,
-        )
-    
-    def test_edit_own_post(self):
-        """Test author can edit own post"""
-        self.client.login(username='testuser', password='testpass123')
-        response = self.client.get(
-            reverse('edit_post', kwargs={'slug': self.post.slug})
-        )
-        self.assertEqual(response.status_code, 200)
-    
-    def test_cannot_edit_others_post(self):
-        """Test user cannot edit others' posts"""
-        self.client.login(username='otheruser', password='testpass123')
-        response = self.client.get(
-            reverse('edit_post', kwargs={'slug': self.post.slug})
-        )
-        self.assertEqual(response.status_code, 403)  # Forbidden
-```
-
-### Understanding View Tests
-
-**Client:**
-```python
-self.client = Client()
-self.client.get(url)
-self.client.post(url, data)
-self.client.login(username='user', password='pass')
-```
-
-**URL Reverse:**
-```python
-reverse('home')  # Instead of hardcoding '/blog/'
-reverse('post_detail', kwargs={'slug': 'my-post'})
-```
-
-**Response Assertions:**
-```python
-self.assertEqual(response.status_code, 200)
-self.assertTemplateUsed(response, 'blog/home.html')
-self.assertContains(response, 'text')
-self.assertNotContains(response, 'text')
-```
-
-## Step 3: Testing Forms
-
-Create `blog/tests/test_forms.py`:
-
-```python
-from django.test import TestCase
-from django.contrib.auth.models import User
-from blog.forms import PostForm, CommentForm
-from blog.models import Category, Post
-
-
-class PostFormTest(TestCase):
-    """Test PostForm"""
-    
-    def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123'
-        )
-        self.category = Category.objects.create(name='Tech')
-    
-    def test_post_form_valid_data(self):
-        """Test form with valid data"""
-        form = PostForm(data={
-            'title': 'Test Post',
-            'content': 'Test content' * 20,
-            'category': self.category.id,
-            'status': 'draft',
-        })
-        self.assertTrue(form.is_valid())
-    
-    def test_post_form_empty_title(self):
-        """Test form with empty title"""
-        form = PostForm(data={
-            'title': '',
-            'content': 'Test content' * 20,
-            'category': self.category.id,
-            'status': 'draft',
-        })
-        self.assertFalse(form.is_valid())
-        self.assertIn('title', form.errors)
-    
-    def test_post_form_short_content(self):
-        """Test form with short content"""
-        form = PostForm(data={
-            'title': 'Test',
-            'content': 'Short',  # Too short
-            'category': self.category.id,
-            'status': 'draft',
-        })
-        self.assertFalse(form.is_valid())
-
-
-class CommentFormTest(TestCase):
-    """Test CommentForm"""
-    
-    def test_comment_form_valid(self):
-        """Test form with valid data"""
-        form = CommentForm(data={
-            'content': 'Test comment',
-        })
-        self.assertTrue(form.is_valid())
-    
-    def test_comment_form_empty(self):
-        """Test form with empty content"""
-        form = CommentForm(data={
-            'content': '',
-        })
-        self.assertFalse(form.is_valid())
-```
-
-## Step 4: Test Coverage
-
-Install coverage tool:
-
-```bash
+# Run with coverage
 pip install coverage
-```
-
-Run with coverage:
-
-```bash
-# Run tests with coverage
-coverage run --source='.' manage.py test blog
-
-# Generate report
+coverage run --source='.' manage.py test
 coverage report
-
-# Generate HTML report
-coverage html
-
-# Open in browser
-open htmlcov/index.html  # macOS
-xdg-open htmlcov/index.html  # Linux
-start htmlcov/index.html  # Windows
+coverage html  # Generate HTML report
 ```
 
-**Interpreting Coverage:**
-- 80%+: Good coverage
-- 90%+: Great coverage
-- 100%: Perfect (but hard to achieve)
+### Coverage Report
 
-## Deployment Preparation
+Buka `htmlcov/index.html` di browser buat liat coverage report yang bagus!
 
-### Step 1: Environment Variables
+## Part 2: Deployment Preparation
 
-Update `.env`:
+### 1. Environment Variables
 
-```bash
-# Production settings
+Pake `python-decouple` (sudah installed):
+
+`.env` file:
+```
+SECRET_KEY=your-secret-key-here
 DEBUG=False
-SECRET_KEY=your-production-secret-key-here
 ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
-
-# Database (PostgreSQL for production)
-DATABASE_URL=postgresql://user:password@localhost:5432/dbname
-
-# Email
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
+DATABASE_URL=postgres://user:pass@host:port/dbname
 ```
 
-### Step 2: Production Settings
+`settings.py`:
+```python
+from decouple import config
 
-Update `settings.py`:
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', default=False, cast=bool)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='').split(',')
+```
+
+### 2. Production Settings
 
 ```python
-from decouple import config, Csv
+# settings.py
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
-
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
-
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-    }
-}
-
-# Security settings
+# Security
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
@@ -575,446 +195,256 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-```
 
-### Step 3: Static Files for Production
-
-```python
-# settings.py
+# Static files
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Collect static files
-python manage.py collectstatic
+# Database - PostgreSQL untuk production
+import dj_database_url
+if not DEBUG:
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=config('DATABASE_URL')
+        )
+    }
 ```
 
-This copies all static files to one directory for serving.
+### 3. Requirements
 
-### Step 4: Database Migration
-
-For PostgreSQL:
-
-```bash
-# Install psycopg2
-pip install psycopg2-binary
-
-# Create database
-createdb blog_cms_db
-
-# Run migrations
-python manage.py migrate
-
-# Create superuser
-python manage.py createsuperuser
-```
-
-### Step 5: Requirements File
-
-Generate production requirements:
+Generate `requirements.txt`:
 
 ```bash
 pip freeze > requirements.txt
 ```
 
-Should include:
+Or manually create:
 ```
-Django==4.2.25
-psycopg2-binary==2.9.9
+Django==4.2.7
 python-decouple==3.8
-Pillow==10.0.0
-gunicorn==21.2.0  # For production server
-whitenoise==6.5.0  # For serving static files
+Pillow==10.1.0
+dj-database-url==2.1.0
+psycopg2-binary==2.9.9  # PostgreSQL
+gunicorn==21.2.0        # Production server
+whitenoise==6.6.0       # Static files
 ```
 
-## Deployment Options
+### 4. Whitenoise (Static Files)
 
-### Option 1: Heroku
-
-1. **Install Heroku CLI**
-   ```bash
-   # Follow: https://devcenter.heroku.com/articles/heroku-cli
-   ```
-
-2. **Create `Procfile`:**
-   ```
-   web: gunicorn blog_cms.wsgi --log-file -
-   ```
-
-3. **Create `runtime.txt`:**
-   ```
-   python-3.11.14
-   ```
-
-4. **Deploy:**
-   ```bash
-   heroku login
-   heroku create your-app-name
-   git push heroku main
-   heroku run python manage.py migrate
-   heroku run python manage.py createsuperuser
-   heroku open
-   ```
-
-### Option 2: DigitalOcean / AWS / VPS
-
-1. **Install dependencies on server:**
-   ```bash
-   sudo apt update
-   sudo apt install python3-pip python3-venv nginx postgresql
-   ```
-
-2. **Setup project:**
-   ```bash
-   git clone your-repo
-   cd your-project
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-3. **Setup Gunicorn:**
-   ```bash
-   gunicorn --bind 0.0.0.0:8000 blog_cms.wsgi
-   ```
-
-4. **Setup Nginx:**
-   ```nginx
-   server {
-       listen 80;
-       server_name yourdomain.com;
-       
-       location /static/ {
-           root /path/to/your/project;
-       }
-       
-       location /media/ {
-           root /path/to/your/project;
-       }
-       
-       location / {
-           proxy_pass http://127.0.0.1:8000;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-       }
-   }
-   ```
-
-5. **Setup Supervisor (process manager):**
-   ```bash
-   sudo apt install supervisor
-   ```
-   
-   Create `/etc/supervisor/conf.d/blog_cms.conf`:
-   ```
-   [program:blog_cms]
-   command=/path/to/venv/bin/gunicorn blog_cms.wsgi:application --bind 127.0.0.1:8000
-   directory=/path/to/project
-   user=your-user
-   autostart=true
-   autorestart=true
-   ```
-
-6. **Setup SSL with Let's Encrypt:**
-   ```bash
-   sudo apt install certbot python3-certbot-nginx
-   sudo certbot --nginx -d yourdomain.com
-   ```
-
-### Option 3: PythonAnywhere
-
-1. **Sign up:** https://www.pythonanywhere.com/
-2. **Upload code** via Git or files
-3. **Create virtual environment**
-4. **Configure Web app** in dashboard
-5. **Set environment variables**
-6. **Reload app**
-
-## Security Checklist
-
-Before deploying:
-
-- ✅ `DEBUG = False` in production
-- ✅ Strong `SECRET_KEY` (don't commit to Git!)
-- ✅ `ALLOWED_HOSTS` configured
-- ✅ Use HTTPS (SSL certificate)
-- ✅ `SECURE_*` settings enabled
-- ✅ Database credentials secure
-- ✅ Use environment variables
-- ✅ Keep dependencies updated
-- ✅ Validate user input
-- ✅ Use CSRF protection
-- ✅ SQL injection protection (ORM does this)
-- ✅ XSS protection (templates do this)
-
-## Monitoring
-
-### Logging
-
-Configure logging in `settings.py`:
-
-```python
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    },
-}
-```
-
-Create logs directory:
-```bash
-mkdir logs
-```
-
-### Error Tracking
-
-Use services like:
-- **Sentry**: Error tracking and monitoring
-- **Rollbar**: Real-time error tracking
-- **Bugsnag**: Exception reporting
-
-Install Sentry:
-```bash
-pip install sentry-sdk
-```
-
-Configure:
-```python
-import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
-
-sentry_sdk.init(
-    dsn="your-sentry-dsn",
-    integrations=[DjangoIntegration()],
-)
-```
-
-## Performance Optimization
-
-### 1. Database Query Optimization
-
-```python
-# Bad: N+1 queries
-posts = Post.objects.all()
-for post in posts:
-    print(post.author.username)  # Query per post!
-
-# Good: Select related
-posts = Post.objects.select_related('author', 'category')
-for post in posts:
-    print(post.author.username)  # No extra queries!
-
-# Prefetch related (for many-to-many)
-posts = Post.objects.prefetch_related('comments')
-```
-
-### 2. Caching
-
-Install Redis:
-```bash
-pip install django-redis
-```
-
-Configure:
-```python
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379/1',
-    }
-}
-```
-
-Use caching:
-```python
-from django.views.decorators.cache import cache_page
-
-@cache_page(60 * 15)  # Cache for 15 minutes
-def home(request):
-    # ...
-```
-
-### 3. Static File Serving
-
-Use WhiteNoise:
+Install:
 ```bash
 pip install whitenoise
 ```
 
-Configure:
+`settings.py`:
 ```python
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this
-    # ...
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add this!
+    # ... other middleware
 ]
 
+# Static files with compression
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 ```
 
-### 4. Database Indexing
+### 5. Gunicorn (Production Server)
 
-```python
-class Post(models.Model):
-    title = models.CharField(max_length=200, db_index=True)  # Add index
-    slug = models.SlugField(unique=True, db_index=True)
-    
-    class Meta:
-        indexes = [
-            models.Index(fields=['created_at']),
-            models.Index(fields=['status', 'created_at']),
-        ]
+`Procfile` (buat Heroku):
+```
+web: gunicorn blog_cms.wsgi
 ```
 
-## Maintenance
+Run locally:
+```bash
+gunicorn blog_cms.wsgi:application
+```
 
-### Regular Tasks
+## Part 3: Deployment Options
 
-1. **Update dependencies:**
+### Option 1: PythonAnywhere (Gratis!)
+
+1. Sign up: https://www.pythonanywhere.com
+2. Upload code atau clone dari GitHub
+3. Setup virtual environment
+4. Configure WSGI file
+5. Set static files path
+6. Reload web app
+
+**Pros:** Free, easy, perfect buat learning  
+**Cons:** Limited resources di free tier
+
+### Option 2: Heroku
+
+1. Install Heroku CLI
+2. Create `Procfile`
+3. Create `runtime.txt`:
+   ```
+   python-3.11.6
+   ```
+4. Deploy:
    ```bash
-   pip list --outdated
-   pip install --upgrade package-name
+   heroku create your-app-name
+   git push heroku main
+   heroku run python manage.py migrate
+   heroku run python manage.py createsuperuser
    ```
 
-2. **Backup database:**
-   ```bash
-   python manage.py dumpdata > backup.json
-   
-   # PostgreSQL
-   pg_dump dbname > backup.sql
-   ```
+**Pros:** Easy deployment, Git-based  
+**Cons:** Not free anymore (minimum $5/month)
 
-3. **Monitor logs:**
-   ```bash
-   tail -f logs/django.log
-   ```
+### Option 3: DigitalOcean / AWS
 
-4. **Check security:**
-   ```bash
-   python manage.py check --deploy
-   ```
+Lebih advanced, butuh setup server manually.
 
-5. **Run tests regularly:**
-   ```bash
-   python manage.py test
-   ```
+**Pros:** Full control, scalable  
+**Cons:** More complex, butuh devops knowledge
+
+### Option 4: Vercel / Railway
+
+Modern hosting dengan Git integration.
+
+**Pros:** Easy, modern  
+**Cons:** Bisa mahal kalo traffic tinggi
 
 ## Deployment Checklist
 
-Final checklist before going live:
+Sebelum deploy:
 
-- ✅ All tests passing
 - ✅ `DEBUG = False`
-- ✅ Secret key secure
-- ✅ Environment variables set
-- ✅ Database configured
-- ✅ Static files collected
-- ✅ Media files directory created
-- ✅ Migrations applied
-- ✅ Superuser created
-- ✅ SSL certificate installed
-- ✅ Domain configured
-- ✅ Email sending working
-- ✅ Error logging configured
-- ✅ Backups automated
-- ✅ Monitoring setup
+- ✅ `SECRET_KEY` di environment variable
+- ✅ `ALLOWED_HOSTS` configured
+- ✅ Database production (PostgreSQL)
+- ✅ Static files configured
+- ✅ Run `collectstatic`
+- ✅ Run migrations
+- ✅ Create superuser
+- ✅ Test di production!
 
-## Troubleshooting Production
+## Post-Deployment
 
-### Issue: Static files not loading
+### Monitoring
 
-Check:
-```python
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-```
-
-Run:
 ```bash
-python manage.py collectstatic
+# Check logs
+heroku logs --tail  # Heroku
+# atau
+tail -f /var/log/django/error.log  # VPS
 ```
 
-### Issue: Database connection error
+### Backups
 
-Check:
-- Database is running
-- Credentials are correct
-- Database exists
-- Firewall allows connection
+```bash
+# Backup database
+python manage.py dumpdata > backup.json
 
-### Issue: 500 Internal Server Error
+# Restore
+python manage.py loaddata backup.json
+```
 
-Check:
-- Error logs
-- `DEBUG = True` temporarily (remove after!)
-- Sentry/error tracking
+### Updates
 
-### Issue: Permission denied
+```bash
+git push heroku main  # Deploy update
+heroku run python manage.py migrate  # Run migrations
+heroku restart  # Restart app
+```
 
-Check:
-- File/directory permissions
-- Media directory writable
-- Static directory readable
+## Common Production Issues
 
-## What You've Learned
+### Static Files Not Loading
+```bash
+python manage.py collectstatic --noinput
+```
 
-- Writing Django tests
-- Testing models, views, and forms
-- Test coverage
-- Deployment preparation
-- Production settings
-- Security best practices
-- Performance optimization
-- Monitoring and maintenance
-- Deployment options
+### Database Connection Error
+Check `DATABASE_URL` environment variable.
 
-## Congratulations!
+### 500 Error
+Check logs! Set `DEBUG=True` temporarily buat liat error.
 
-You've completed the Django Blog/CMS tutorial! You now know:
+### ALLOWED_HOSTS Error
+Add domain ke `ALLOWED_HOSTS`:
+```python
+ALLOWED_HOSTS = ['yourdomain.com', 'www.yourdomain.com']
+```
 
-1. Django basics (models, views, URLs)
-2. Admin customization
-3. Forms and validation
-4. Authentication and permissions
-5. Template system
-6. Static files and CSS
-7. Testing
-8. Deployment
+## Performance Tips
 
-## Next Steps
+### 1. Use PostgreSQL (Not SQLite)
 
-Continue learning:
+SQLite bagus buat development, tapi PostgreSQL better buat production.
 
-1. **Django REST Framework**: Build APIs
-2. **Celery**: Background tasks
-3. **Docker**: Containerization
-4. **CI/CD**: Automated deployment
-5. **Advanced queries**: Aggregation, annotations
-6. **Custom middleware**: Request/response processing
-7. **Custom template tags**: Reusable template logic
-8. **WebSockets**: Real-time features
+### 2. Cache
+
+```python
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379',
+    }
+}
+```
+
+### 3. CDN untuk Static Files
+
+Pake Cloudflare atau AWS CloudFront buat serve static files.
+
+### 4. Compress Images
+
+Compress images sebelum upload atau pake library kayak `django-imagekit`.
+
+### 5. Database Indexes
+
+```python
+class Post(models.Model):
+    slug = models.SlugField(unique=True, db_index=True)  # Index!
+```
+
+## Kesimpulan
+
+Lo udah belajar:
+
+✅ Writing tests di Django  
+✅ Running dan checking coverage  
+✅ Production settings  
+✅ Environment variables  
+✅ Static files setup  
+✅ Deployment options  
+✅ Production checklist  
+✅ Monitoring dan maintenance  
+
+**Selamat!** 🎉 Lo udah complete full Django tutorial dari zero sampe deployment!
+
+## What's Next?
+
+### Improve Blog
+- Add tags
+- Search functionality
+- RSS feed
+- Social sharing
+- Email notifications
+
+### Learn More
+- Django REST Framework (API)
+- Django Channels (WebSockets)
+- Celery (Background tasks)
+- Docker (Containerization)
+
+### Build More Projects
+- E-commerce site
+- Social media clone
+- Portfolio website
+- API backend
 
 ## Resources
 
-- [Django Documentation](https://docs.djangoproject.com/)
-- [Django REST Framework](https://www.django-rest-framework.org/)
-- [Two Scoops of Django](https://www.feldroy.com/two-scoops-of-django-3-x)
-- [Django Discord](https://discord.gg/xcRH6mN4fa)
-- [r/django](https://www.reddit.com/r/django/)
+- [Django Docs](https://docs.djangoproject.com/)
+- [Django Testing](https://docs.djangoproject.com/en/stable/topics/testing/)
+- [Deployment Checklist](https://docs.djangoproject.com/en/stable/howto/deployment/checklist/)
+- [Django Best Practices](https://django-best-practices.readthedocs.io/)
 
 ---
 
-**Thank you for following this tutorial! Happy coding! 🚀**
+**Congratulations!** Lo udah selesai Django tutorial lengkap! 🚀
+
+Sekarang saatnya **BIKIN PROJECT LO SENDIRI!** Good luck! 💪
