@@ -1,11 +1,35 @@
 # Tutorial 02: Setup Project Django
 
+## Overview
+
+Di Chapter 1 lo udah belajar **konsep** Django. Sekarang waktunya **PRAKTEK**! 
+
+Di chapter ini, lo bakal:
+- ✅ Bikin Django project dari awal
+- ✅ Setup production-ready configuration (environment variables, security)
+- ✅ Bikin blog app
+- ✅ Configure database, static files, media uploads
+- ✅ Akses admin panel pertama kali
+
+**Ready? Let's code!** 🚀
+
+## Prerequisites
+
+Pastiin lo udah:
+- ✅ Install Python 3.8+
+- ✅ Setup virtual environment dan aktifin
+- ✅ Install Django (`pip install Django`)
+
+Belum? Balik ke [Chapter 1](./01-memulai.md) dulu!
+
 ## Apa yang Bakal Lo Bikin di Chapter Ini
 
-- Bikin struktur project Django
-- Bikin aplikasi blog
-- Configure settings project
-- Jalanin Django server pertama lo
+Struktur project production-ready dengan:
+- Environment variables (security best practice)
+- Proper folder structure (static, media, templates)
+- Database ready (SQLite buat development)
+- Admin panel configured
+- Authentication settings
 
 ## Step 1: Bikin Django Project
 

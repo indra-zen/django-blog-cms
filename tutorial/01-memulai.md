@@ -198,367 +198,73 @@ python -m django --version
 
 Harusnya keluar versi Django (misal: 4.2.7)
 
-## Bikin Project Django Pertama
+## Django Project Structure
 
-### Step 1: Create Project
+Sebelum kita mulai coding, lo perlu ngerti struktur project Django. Di [Tutorial 02](./02-setup-project.md), lo bakal setup project lengkap dengan configuration yang production-ready. 
 
-```bash
-django-admin startproject blog_cms .
-```
+Tapi buat sekarang, cukup tau konsep dasarnya:
 
-**Penjelasan:**
-- `django-admin` = tool buat bikin project Django
-- `startproject blog_cms` = bikin project namanya "blog_cms"
-- `.` = bikin di folder current (jangan bikin folder baru lagi)
+**Project vs App:**
+- **Project** = Keseluruhan website (misal: blog_cms)
+- **App** = Komponen/modul tertentu (misal: blog, users, products)
 
-### Step 2: Struktur Project
+**File-file penting:**
+- **`manage.py`** - Tool buat jalanin command Django (runserver, migrate, dll)
+- **`settings.py`** - Konfigurasi project (database, apps, security)
+- **`urls.py`** - URL routing (misal: `/blog/` ke mana)
+- **`models.py`** - Define struktur database
+- **`views.py`** - Logic yang handle request
+- **`templates/`** - File HTML
 
-Lo bakal liat struktur kayak gini:
+**Note:** Tutorial ini fokus ke konsep. Di Tutorial 02, lo bakal hands-on bikin project lengkap!
 
-```
-django-blog-tutorial/
-├── venv/                    # Virtual environment (jangan disentuh)
-├── blog_cms/                # Folder konfigurasi project
-│   ├── __init__.py         # File Python biasa
-│   ├── settings.py         # Settings project (penting!)
-│   ├── urls.py             # URL routing utama
-│   ├── asgi.py             # Buat deployment (ignore dulu)
-│   └── wsgi.py             # Buat deployment (ignore dulu)
-└── manage.py                # Tool buat jalanin commands Django
-```
+## Contoh Simpel: Views dan Templates
 
-**Penjelasan tiap file:**
+Cukup ngerti konsep dasarnya dulu. Nanti di tutorial selanjutnya, lo bakal praktek langsung bikin views dan templates.
 
-- **`manage.py`** - Script buat jalanin berbagai command Django (run server, migrations, dll)
-- **`settings.py`** - Semua konfigurasi project (database, apps, security, dll)
-- **`urls.py`** - Define URL patterns (misal `/blog/` harus kemana)
-
-### Step 3: Jalanin Development Server
-
-```bash
-python manage.py runserver
-```
-
-**Penjelasan:** Command ini jalanin server development Django di http://localhost:8000/
-
-Buka browser, ke `http://localhost:8000/` - lo bakal liat halaman welcome Django! 🎉
-
-**Tips:** Buat stop server, pencet `Ctrl+C` di terminal.
-
-## Bikin App Pertama
-
-Di Django, **project** itu keseluruhan website, sedangkan **app** itu komponen/modul tertentu.
-
-Contoh:
-- **Project:** Online Store
-- **App:** Blog, Products, Shopping Cart, User Accounts
-
-Buat blog kita, bikin app namanya `blog`:
-
-```bash
-python manage.py startapp blog
-```
-
-Sekarang struktur lo jadi:
-
-```
-django-blog-tutorial/
-├── venv/
-├── blog/                    # App blog (BARU!)
-│   ├── __init__.py
-│   ├── admin.py            # Register models ke admin
-│   ├── apps.py             # Config app
-│   ├── models.py           # Define database models
-│   ├── tests.py            # Unit tests
-│   ├── views.py            # View functions
-│   └── migrations/         # Database migrations
-├── blog_cms/
-│   ├── settings.py
-│   ├── urls.py
-│   └── ...
-└── manage.py
-```
-
-### Register App di Settings
-
-Buka `blog_cms/settings.py`, cari `INSTALLED_APPS`, tambahin `'blog'`:
-
+**View = Fungsi Python**
 ```python
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'blog',  # <-- TAMBAHIN INI
-]
-```
-
-**Kenapa?** Django harus tau app mana aja yang dipake di project ini.
-
-## Bikin View Pertama
-
-View itu fungsi Python yang handle request dan return response (biasanya HTML).
-
-Buka `blog/views.py` dan tambahin:
-
-```python
-from django.http import HttpResponse
-
 def home(request):
-    return HttpResponse("<h1>Welcome to My Blog!</h1>")
+    return render(request, 'home.html', {'data': 'Hello!'})
 ```
 
-**Penjelasan:**
-- `request` = objek yang berisi info tentang HTTP request
-- `HttpResponse` = response sederhana (return HTML string)
+**Template = HTML + Variabel**
+```html
+<h1>{{ data }}</h1>  <!-- Prints: Hello! -->
+```
 
-### Setup URL
-
-Sekarang Django harus tau kapan fungsi `home` dipanggil. Setup URL-nya:
-
-1. Bikin file baru `blog/urls.py`:
-
+**URL Routing**
 ```python
-from django.urls import path
-from . import views
-
 urlpatterns = [
     path('', views.home, name='home'),
 ]
 ```
 
-**Penjelasan:**
-- `path('', ...)` = URL root (`/`)
-- `views.home` = fungsi yang dipanggil
-- `name='home'` = nama URL (buat reference nanti)
+**Flow:** User buka `/` → Django panggil `views.home` → Render `home.html` dengan data → User liat HTML
 
-2. Include di `blog_cms/urls.py`:
-
-```python
-from django.contrib import admin
-from django.urls import path, include  # <-- tambahin include
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('blog.urls')),  # <-- TAMBAHIN INI
-]
-```
-
-### Test
-
-Jalanin server lagi:
-
-```bash
-python manage.py runserver
-```
-
-Buka `http://localhost:8000/` - lo bakal liat "Welcome to My Blog!" 🎉
-
-## Bikin View dengan Template
-
-Return HTML string dari view itu kurang praktis. Better pake **template** (file HTML terpisah).
-
-### Step 1: Bikin Folder Templates
-
-```bash
-mkdir -p blog/templates/blog
-```
-
-**Penjelasan:** Django otomatis cari templates di folder `templates/` di setiap app.
-
-### Step 2: Bikin Template
-
-Bikin file `blog/templates/blog/home.html`:
-
-```html
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Blog</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        h1 {
-            color: #333;
-            border-bottom: 3px solid #007bff;
-            padding-bottom: 10px;
-        }
-        .welcome {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-    </style>
-</head>
-<body>
-    <div class="welcome">
-        <h1>Welcome to My Blog! 🚀</h1>
-        <p>Ini blog pertama gue yang dibikin pake Django!</p>
-        <p>Lo udah berhasil setup Django project. Keren!</p>
-    </div>
-</body>
-</html>
-```
-
-**Note:** Lo masih pake HTML, CSS biasa kan? Iya! Django ga ngeganti HTML/CSS lo, cuma nambah kemampuan dinamis aja.
-
-### Step 3: Update View
-
-Ganti `blog/views.py`:
-
-```python
-from django.shortcuts import render
-
-def home(request):
-    return render(request, 'blog/home.html')
-```
-
-**Penjelasan:**
-- `render()` = fungsi buat render template
-- Argumen pertama: request object
-- Argumen kedua: path ke template
-
-### Test Lagi
-
-Refresh browser lo - sekarang pake template yang proper! 🎨
-
-## Tambahin Data Dinamis ke Template
-
-Sekarang kita bikin template yang beneran **dinamis** - terima data dari view.
-
-### Update View dengan Context
-
-Edit `blog/views.py`:
-
-```python
-from django.shortcuts import render
-
-def home(request):
-    # Data yang mau dikirim ke template
-    context = {
-        'site_name': 'Blog Gue',
-        'posts_count': 5,
-        'author': 'Nama Lo',
-        'posts': [
-            {'title': 'Post Pertama', 'content': 'Ini konten post pertama'},
-            {'title': 'Post Kedua', 'content': 'Ini konten post kedua'},
-            {'title': 'Post Ketiga', 'content': 'Ini konten post ketiga'},
-        ]
-    }
-    return render(request, 'blog/home.html', context)
-```
-
-**Penjelasan:**
-- `context` = dictionary berisi data yang mau dikirim ke template
-- Mirip kayak props di React atau data di Vue
-
-### Update Template
-
-Edit `blog/templates/blog/home.html`:
-
-```html
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ site_name }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        h1 {
-            color: #333;
-            border-bottom: 3px solid #007bff;
-            padding-bottom: 10px;
-        }
-        .welcome {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .post {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .post h2 {
-            margin-top: 0;
-            color: #007bff;
-        }
-    </style>
-</head>
-<body>
-    <div class="welcome">
-        <h1>Welcome to {{ site_name }}! 🚀</h1>
-        <p>Author: <strong>{{ author }}</strong></p>
-        <p>Total posts: <strong>{{ posts_count }}</strong></p>
-    </div>
-
-    <h2>Recent Posts:</h2>
-    {% for post in posts %}
-        <div class="post">
-            <h2>{{ post.title }}</h2>
-            <p>{{ post.content }}</p>
-        </div>
-    {% endfor %}
-</body>
-</html>
-```
-
-**Penjelasan Syntax Template Django:**
-
-- **`{{ variable }}`** - Print variabel (kayak `${variable}` di JavaScript)
-- **`{% for item in list %} ... {% endfor %}`** - Loop (kayak `for` di JavaScript)
-- **`{% if condition %} ... {% endif %}`** - Conditional (kayak `if` di JavaScript)
-
-**Bandingkan dengan JavaScript:**
-```javascript
-// JavaScript
-const posts = [...];
-posts.forEach(post => {
-    console.log(post.title);
-});
-
-// Django Template (mirip kan?)
-{% for post in posts %}
-    {{ post.title }}
-{% endfor %}
-```
-
-### Test
-
-Refresh browser - sekarang lo liat data dari view muncul di template! 🎉
+Simpel kan? Sekarang lo udah ngerti **konsepnya**. Di Tutorial 02-10, lo bakal **praktik** bikin blog lengkap!
 
 ## Kesimpulan Chapter 1
 
-Lo udah belajar:
+Lo udah belajar **KONSEP DASAR** Django:
 
-✅ Apa itu Django dan kenapa lo perlu pake framework  
+✅ Apa itu Django dan kenapa perlu framework  
 ✅ Arsitektur MTV (Model-Template-View)  
-✅ Setup development environment  
-✅ Bikin project dan app Django  
-✅ Bikin view dan URL routing  
-✅ Pake templates buat render HTML  
-✅ Kirim data dari view ke template (context)  
+✅ Setup development environment (Python, venv, Django)  
+✅ Perbedaan Project vs App  
+✅ Konsep Views, Templates, dan URL routing  
+✅ Template syntax (variables, loops)  
+
+**Ini chapter pengenalan!** Lo baru ngerti konsepnya aja. Mulai Chapter 2, lo bakal **hands-on** bikin project blog lengkap step by step.
+
+### Yang Lo Perlu Sekarang:
+
+1. ✅ Python installed (version 3.8+)
+2. ✅ Virtual environment ready
+3. ✅ Django installed
+4. ✅ Paham konsep MTV
+
+Udah? Bagus! Lanjut ke praktik!  
 
 ### Hubungan dengan HTML/CSS/JS yang Lo Udah Tau
 
