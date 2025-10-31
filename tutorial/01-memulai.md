@@ -570,7 +570,7 @@ Django **ga ngeganti** skill HTML/CSS/JS lo - malah **ngeboost** dengan kemampua
 
 ## Next Steps
 
-Di [Chapter 2](./02-arsitektur-django.md), lo bakal belajar lebih dalam tentang:
+Di [Chapter 2](./02-setup-project.md), lo bakal belajar lebih dalam tentang:
 - Request/Response cycle detail
 - Settings dan configuration
 - Best practices Django
