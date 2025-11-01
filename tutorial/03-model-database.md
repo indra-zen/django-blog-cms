@@ -47,12 +47,14 @@ Buka `blog/models.py` dan ganti isinya:
 ```python
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils import timezone
+from django.urls import reverse
+from django.utils.text import slugify
+
 
 class Category(models.Model):
     """Model buat kategori post (Technology, Programming, dll)"""
-    name = models.CharField(max_length=100)
-    slug = models.SlugField(unique=True)
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -62,6 +64,16 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        """Auto-generate slug dari name"""
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    
+    def get_absolute_url(self):
+        """URL ke halaman category"""
+        return reverse('category_posts', kwargs={'slug': self.slug})
 
 
 class Post(models.Model):
@@ -74,12 +86,12 @@ class Post(models.Model):
 
     # Fields
     title = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True, max_length=200)
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_posts')
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='posts')
-    excerpt = models.TextField(max_length=300, blank=True)
+    slug = models.SlugField(max_length=200, unique=True, blank=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts')
     content = models.TextField()
-    featured_image = models.ImageField(upload_to='posts/%Y/%m/', blank=True, null=True)
+    excerpt = models.TextField(max_length=500, blank=True)
+    featured_image = models.ImageField(upload_to='posts/%Y/%m/%d/', blank=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
     
     # Timestamps
@@ -89,29 +101,44 @@ class Post(models.Model):
 
     class Meta:
         ordering = ['-published_at', '-created_at']  # Urutkan dari terbaru
-        verbose_name = "Blog Post"
-        verbose_name_plural = "Blog Posts"
+        indexes = [
+            models.Index(fields=['-published_at']),
+            models.Index(fields=['status']),
+        ]
 
     def __str__(self):
         return self.title
 
     def save(self, *args, **kwargs):
-        """Override save buat set published_at otomatis"""
-        if self.status == 'published' and not self.published_at:
-            self.published_at = timezone.now()
+        """Auto-generate slug dari title"""
+        if not self.slug:
+            self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+    
+    def get_absolute_url(self):
+        """URL ke detail page post ini"""
+        return reverse('post_detail', kwargs={'slug': self.slug})
+    
+    @property
+    def approved_comments(self):
+        """Ambil semua comment yang udah diapprove"""
+        return self.comments.filter(approved=True)
 
 
 class Comment(models.Model):
     """Model buat komentar di post"""
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
-    content = models.TextField()
-    is_approved = models.BooleanField(default=False)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    content = models.TextField(max_length=1000)
+    approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['created_at']  # Urutkan dari terlama
+        indexes = [
+            models.Index(fields=['post', 'approved']),
+        ]
 
     def __str__(self):
         return f'Comment by {self.author.username} on {self.post.title}'
@@ -157,7 +184,7 @@ updated_at = models.DateTimeField(auto_now=True)  # Update setiap save
 **Boolean:**
 ```python
 # BooleanField - True/False
-is_approved = models.BooleanField(default=False)  # Kayak checkbox
+approved = models.BooleanField(default=False)  # Kayak checkbox
 ```
 
 **File/Image:**
@@ -488,7 +515,7 @@ Post.objects.filter(category__name__icontains='tech')
 
 # Reverse relationship
 user = User.objects.get(username='john')
-user_posts = user.blog_posts.all()  # related_name='blog_posts'
+user_posts = user.posts.all()  # related_name='posts'
 
 # Count related objects
 category = Category.objects.get(slug='technology')
